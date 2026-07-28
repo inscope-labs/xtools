@@ -1,0 +1,10 @@
+{
+  "id": "com.inscopelabs.xtools.plugin.sample",
+  "name": "Bridge Tester & Hash Utility",
+  "version": "1.0.0",
+  "author": "Inscope Labs",
+  "description": "Demonstrates native Android bridge interaction, storage, UI toasts, and SHA-256 checksums.",
+  "entry": "index.html",
+  "permissions": ["storage", "ui", "system", "http"],
+  "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

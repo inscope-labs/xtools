@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System & Network Inspector</title>
+    <script src="../xtools-bridge.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0F172A; color: #F8FAFC; padding: 16px; margin: 0; }
+        .card { background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        h2 { color: #38BDF8; font-size: 16px; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
+        .grid-item { background: #0F172A; padding: 8px; border-radius: 6px; }
+        .label { color: #94A3B8; font-size: 11px; }
+        .value { font-weight: bold; margin-top: 2px; }
+        button { background: #0284C7; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 8px; cursor: pointer; }
+        pre { background: #0F172A; padding: 10px; border-radius: 8px; font-size: 11px; color: #4ADE80; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📱 Device Environment</h2>
+        <div class="grid" id="deviceGrid">
+            <div class="grid-item"><div class="label">OS Version</div><div class="value" id="valOS">Loading...</div></div>
+            <div class="grid-item"><div class="label">SDK Int</div><div class="value" id="valSDK">Loading...</div></div>
+            <div class="grid-item"><div class="label">Device Model</div><div class="value" id="valModel">Loading...</div></div>
+            <div class="grid-item"><div class="label">App ID</div><div class="value" id="valAppId">Loading...</div></div>
+        </div>
+        <button id="btnRefresh">Refresh System Data</button>
+    </div>
+
+    <div class="card">
+        <h2>🌐 Network HTTP Fetch Test</h2>
+        <p style="font-size: 12px; color: #94A3B8;">Proxies HTTP request via Kotlin OkHttp engine bypass</p>
+        <button id="btnFetch">Test HTTP GET (httpbin.org/get)</button>
+        <pre id="httpOutput">Click button to send proxy request...</pre>
+    </div>
+
+    <script>
+        function loadInfo() {
+            XTools.system.getInfo().then(function(info) {
+                document.getElementById('valOS').innerText = 'Android ' + info.release;
+                document.getElementById('valSDK').innerText = info.sdk;
+                document.getElementById('valModel').innerText = info.manufacturer + ' ' + info.model;
+                document.getElementById('valAppId').innerText = info.appId;
+            }).catch(function(e) {
+                console.error(e);
+            });
+        }
+
+        document.getElementById('btnRefresh').addEventListener('click', loadInfo);
+        document.getElementById('btnFetch').addEventListener('click', function() {
+            document.getElementById('httpOutput').innerText = 'Fetching...';
+            XTools.http.fetch('https://httpbin.org/get')
+                .then(function(res) {
+                    document.getElementById('httpOutput').innerText = JSON.stringify(res, null, 2);
+                })
+                .catch(function(err) {
+                    document.getElementById('httpOutput').innerText = 'Error: ' + err.message;
+                });
+        });
+
+        document.addEventListener('DOMContentLoaded', loadInfo);
+    </script>
+</body>
+</html>

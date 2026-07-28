@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XTools Bridge Sample Plugin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="../xtools-bridge.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="badge">SDK v1.0.0</div>
+            <h1>XTools Bridge Utility</h1>
+            <p class="subtitle">Kotlin-JS Native Communication Sandbox</p>
+        </header>
+
+        <main class="content">
+            <!-- Native UI Interactions -->
+            <section class="card">
+                <h2>Native UI Actions</h2>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="btnToast">Show Native Toast</button>
+                    <button class="btn btn-secondary" id="btnVibrate">Trigger Haptic</button>
+                    <button class="btn btn-outline" id="btnDialog">Native Dialog</button>
+                </div>
+            </section>
+
+            <!-- Encrypted Storage Test -->
+            <section class="card">
+                <h2>Encrypted Storage</h2>
+                <div class="form-group">
+                    <input type="text" id="storageKey" placeholder="Key (e.g. user_token)" value="demo_key">
+                    <input type="text" id="storageValue" placeholder="Value (e.g. secret_12345)" value="xtools_secret_token">
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-success" id="btnSaveStorage">Save to Encrypted Storage</button>
+                    <button class="btn btn-info" id="btnLoadStorage">Get Value</button>
+                </div>
+                <div class="output-box" id="storageOutput">Storage output will appear here...</div>
+            </section>
+
+            <!-- SHA-256 Checksum Calculator -->
+            <section class="card">
+                <h2>SHA-256 Security Hash</h2>
+                <div class="form-group">
+                    <textarea id="hashInput" rows="2" placeholder="Enter text to hash using Android MessageDigest...">Hello XTools Bridge!</textarea>
+                </div>
+                <button class="btn btn-warning" id="btnCalcHash">Calculate SHA-256 Hash</button>
+                <div class="output-box code" id="hashOutput">Hash result will appear here...</div>
+            </section>
+
+            <!-- System Info -->
+            <section class="card">
+                <h2>Device & Host System</h2>
+                <button class="btn btn-primary" id="btnSysInfo">Fetch System Info</button>
+                <div class="output-box code" id="sysInfoOutput">Click button to fetch native system info...</div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
