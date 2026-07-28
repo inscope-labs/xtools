@@ -1,0 +1,10 @@
+{
+  "id": "com.inscopelabs.xtools.plugin.database",
+  "name": "SQLite Database CRUD",
+  "version": "1.0.0",
+  "author": "Inscope Labs",
+  "description": "Demonstrates native Android SQLite CRUD operations (Create, Read, Update, Delete) via the Kotlin-JavaScript bridge.",
+  "entry": "index.html",
+  "permissions": ["storage", "ui", "system"],
+  "checksum": "d1e2f3a4b5c6"
+}

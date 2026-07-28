@@ -93,6 +93,16 @@
             }
         },
 
+        // SQLite Database API
+        database: {
+            execute: function(sql) {
+                return sendToNative('db.execute', { sql: sql });
+            },
+            query: function(sql) {
+                return sendToNative('db.query', { sql: sql });
+            }
+        },
+
         // UI API (Native toasts, dialogs, vibration, theme)
         ui: {
             showToast: function(message) {

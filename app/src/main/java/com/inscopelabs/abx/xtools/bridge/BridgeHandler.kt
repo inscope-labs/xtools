@@ -1,6 +1,7 @@
 package com.inscopelabs.abx.xtools.bridge
 
 import android.content.Context
+import android.database.Cursor
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -14,6 +15,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
@@ -83,6 +85,47 @@ class BridgeHandler(
                 "storage.clear" -> {
                     securityManager.clearEncryptedStorage(activePluginId)
                     onResponse(BridgeResponse(request.id, result = true))
+                }
+
+                "db.execute" -> {
+                    val sql = request.payload.optString("sql")
+                    if (sql.isBlank()) {
+                        onResponse(BridgeResponse(request.id, error = "SQL query cannot be empty"))
+                        return
+                    }
+                    val safePluginName = activePluginId.replace("[^a-zA-Z0-9_]".toRegex(), "_")
+                    val db = context.openOrCreateDatabase("plugin_${safePluginName}.db", Context.MODE_PRIVATE, null)
+                    db.execSQL(sql)
+                    db.close()
+                    onResponse(BridgeResponse(request.id, result = true))
+                }
+                "db.query" -> {
+                    val sql = request.payload.optString("sql")
+                    if (sql.isBlank()) {
+                        onResponse(BridgeResponse(request.id, error = "SQL query cannot be empty"))
+                        return
+                    }
+                    val safePluginName = activePluginId.replace("[^a-zA-Z0-9_]".toRegex(), "_")
+                    val db = context.openOrCreateDatabase("plugin_${safePluginName}.db", Context.MODE_PRIVATE, null)
+                    val cursor = db.rawQuery(sql, null)
+                    val rows = JSONArray()
+                    while (cursor.moveToNext()) {
+                        val row = JSONObject()
+                        for (i in 0 until cursor.columnCount) {
+                            val colName = cursor.getColumnName(i)
+                            when (cursor.getType(i)) {
+                                Cursor.FIELD_TYPE_INTEGER -> row.put(colName, cursor.getLong(i))
+                                Cursor.FIELD_TYPE_FLOAT -> row.put(colName, cursor.getDouble(i))
+                                Cursor.FIELD_TYPE_STRING -> row.put(colName, cursor.getString(i))
+                                Cursor.FIELD_TYPE_BLOB -> row.put(colName, cursor.getBlob(i).toString())
+                                else -> row.put(colName, JSONObject.NULL)
+                            }
+                        }
+                        rows.put(row)
+                    }
+                    cursor.close()
+                    db.close()
+                    onResponse(BridgeResponse(request.id, result = rows))
                 }
 
                 "ui.toast" -> {
@@ -184,6 +227,7 @@ class BridgeHandler(
     private fun getRequiredPermission(action: String): String? {
         return when {
             action.startsWith("storage.") -> "storage"
+            action.startsWith("db.") -> "storage"
             action.startsWith("ui.") -> "ui"
             action.startsWith("system.") -> "system"
             action.startsWith("http.") -> "http"
