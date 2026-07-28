@@ -1,0 +1,39 @@
+name: Generate Directory Structure
+
+on:
+  workflow_dispatch:  # Enables manual trigger via the Actions tab[reference:0][reference:1]
+
+permissions:
+  contents: write  # Required to commit the generated file back to the repo[reference:2]
+
+jobs:
+  generate-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate DIRECTORY-STRUCTURE.md
+        run: |
+          echo "# Directory Structure" > DIRECTORY-STRUCTURE.md
+          echo "" >> DIRECTORY-STRUCTURE.md
+          echo "| Absolute Path | File Name | Size (Bytes) |" >> DIRECTORY-STRUCTURE.md
+          echo "|---------------|-----------|--------------|" >> DIRECTORY-STRUCTURE.md
+
+          # Find all files, exclude .git folder, format as Markdown table
+          find . -type f -not -path "./.git/*" | while read -r file; do
+            # Get absolute path within the runner's workspace[reference:3]
+            abs_path="${GITHUB_WORKSPACE}${file#.}"
+            # Get just the file name
+            name=$(basename "$file")
+            # Get file size in bytes
+            size=$(stat -c%s "$file")
+            # Append as a table row
+            echo "| \`$abs_path\` | \`$name\` | $size |" >> DIRECTORY-STRUCTURE.md
+          done
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: auto-generate DIRECTORY-STRUCTURE.md"
+          file_pattern: DIRECTORY-STRUCTURE.md
