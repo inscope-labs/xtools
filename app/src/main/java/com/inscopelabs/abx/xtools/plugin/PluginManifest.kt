@@ -22,13 +22,14 @@ data class PluginManifest(
                     permissionsList.add(permArray.getString(i))
                 }
             }
+            val entryFile = if (obj.has("entryPoint")) obj.optString("entryPoint") else obj.optString("entry", "index.html")
             return PluginManifest(
                 id = obj.optString("id", "unknown_plugin"),
                 name = obj.optString("name", "Unnamed Plugin"),
                 version = obj.optString("version", "1.0.0"),
                 author = obj.optString("author", "Unknown"),
                 description = obj.optString("description", ""),
-                entry = obj.optString("entry", "index.html"),
+                entry = entryFile,
                 permissions = permissionsList,
                 checksum = obj.optString("checksum", "")
             )

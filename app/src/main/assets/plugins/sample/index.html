@@ -3,62 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XTools Bridge Sample Plugin</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="../xtools-bridge.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;">
+    <title>xtools Sample Plugin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #faf9fc;
+            color: #1a1c1e;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0061a4;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #414750;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e0e2ec;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1c1e;
+            margin-bottom: 12px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #74777f;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a1c1e;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: #0061a4;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #00497d;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0061a4;
+            border: 1px solid #74777f;
+        }
+
+        .btn-secondary:hover {
+            background: #f4f3f6;
+        }
+
+        .log-container {
+            background: #1a1c1e;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
+        .log-time {
+            color: #74777f;
+        }
+
+        .log-info {
+            color: #9fcaff;
+        }
+
+        .log-warn {
+            color: #ffb74d;
+        }
+
+        .log-error {
+            color: #ef5350;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-ready {
+            background: #d7e3f8;
+            color: #006e1c;
+        }
+
+        .status-error {
+            background: #ffdad6;
+            color: #ba1a1a;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <div class="badge">SDK v1.0.0</div>
-            <h1>XTools Bridge Utility</h1>
-            <p class="subtitle">Kotlin-JS Native Communication Sandbox</p>
-        </header>
+        <h1>xtools Sample</h1>
+        <p class="subtitle">Demonstrating Kotlin-JavaScript bridge communication</p>
 
-        <main class="content">
-            <!-- Native UI Interactions -->
-            <section class="card">
-                <h2>Native UI Actions</h2>
-                <div class="button-group">
-                    <button class="btn btn-primary" id="btnToast">Show Native Toast</button>
-                    <button class="btn btn-secondary" id="btnVibrate">Trigger Haptic</button>
-                    <button class="btn btn-outline" id="btnDialog">Native Dialog</button>
-                </div>
-            </section>
+        <div class="card">
+            <div class="card-title">Status</div>
+            <span id="status" class="status status-ready">Initializing...</span>
+        </div>
 
-            <!-- Encrypted Storage Test -->
-            <section class="card">
-                <h2>Encrypted Storage</h2>
-                <div class="form-group">
-                    <input type="text" id="storageKey" placeholder="Key (e.g. user_token)" value="demo_key">
-                    <input type="text" id="storageValue" placeholder="Value (e.g. secret_12345)" value="xtools_secret_token">
+        <div class="card">
+            <div class="card-title">Device Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Platform</span>
+                    <span id="platform" class="info-value">-</span>
                 </div>
-                <div class="button-group">
-                    <button class="btn btn-success" id="btnSaveStorage">Save to Encrypted Storage</button>
-                    <button class="btn btn-info" id="btnLoadStorage">Get Value</button>
+                <div class="info-item">
+                    <span class="info-label">Version</span>
+                    <span id="version" class="info-value">-</span>
                 </div>
-                <div class="output-box" id="storageOutput">Storage output will appear here...</div>
-            </section>
+                <div class="info-item">
+                    <span class="info-label">Model</span>
+                    <span id="model" class="info-value">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Language</span>
+                    <span id="language" class="info-value">-</span>
+                </div>
+            </div>
+        </div>
 
-            <!-- SHA-256 Checksum Calculator -->
-            <section class="card">
-                <h2>SHA-256 Security Hash</h2>
-                <div class="form-group">
-                    <textarea id="hashInput" rows="2" placeholder="Enter text to hash using Android MessageDigest...">Hello XTools Bridge!</textarea>
-                </div>
-                <button class="btn btn-warning" id="btnCalcHash">Calculate SHA-256 Hash</button>
-                <div class="output-box code" id="hashOutput">Hash result will appear here...</div>
-            </section>
+        <div class="card">
+            <div class="card-title">Actions</div>
+            <button id="btnToast" class="btn btn-primary">Show Toast</button>
+            <button id="btnLog" class="btn btn-secondary">Log Test</button>
+            <button id="btnPrefs" class="btn btn-secondary">Test Preferences</button>
+        </div>
 
-            <!-- System Info -->
-            <section class="card">
-                <h2>Device & Host System</h2>
-                <button class="btn btn-primary" id="btnSysInfo">Fetch System Info</button>
-                <div class="output-box code" id="sysInfoOutput">Click button to fetch native system info...</div>
-            </section>
-        </main>
+        <div class="card">
+            <div class="card-title">Console Log</div>
+            <div id="logContainer" class="log-container">
+                <div class="log-entry"><span class="log-time">[--:--:--]</span> Waiting for events...</div>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="../../xtools-bridge.js"></script>
+    <script>
+        const statusEl = document.getElementById('status');
+        const platformEl = document.getElementById('platform');
+        const versionEl = document.getElementById('version');
+        const modelEl = document.getElementById('model');
+        const languageEl = document.getElementById('language');
+        const logContainer = document.getElementById('logContainer');
+
+        let logCount = 0;
+
+        function log(message, level = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${level}">${message}</span>`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // Keep only last 50 entries
+            logCount++;
+            if (logCount > 50) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        function setStatus(text, isError = false) {
+            statusEl.textContent = text;
+            statusEl.className = isError ? 'status status-error' : 'status status-ready';
+        }
+
+        // Initialize
+        document.addEventListener('xtools-ready', function() {
+            log('xtools bridge ready');
+
+            // Get device info
+            xtools.getDeviceInfo(function(info) {
+                if (info) {
+                    platformEl.textContent = info.platform || 'unknown';
+                    versionEl.textContent = info.platformVersion || 'unknown';
+                    modelEl.textContent = info.model || 'unknown';
+                    languageEl.textContent = info.language || 'unknown';
+                    log('Device info received', 'info');
+                    setStatus('Ready');
+                }
+            });
+
+            // Get plugin info
+            xtools.getPluginInfo(function(info) {
+                if (info) {
+                    log(`Plugin: ${info.name} v${info.version}`, 'info');
+                }
+            });
+        });
+
+        // Toast button
+        document.getElementById('btnToast').addEventListener('click', function() {
+            xtools.showToast('Hello from xtools!', 'short');
+            log('Toast shown', 'info');
+        });
+
+        // Log button
+        document.getElementById('btnLog').addEventListener('click', function() {
+            log('Test log message', 'info');
+            console.info('This is a test log from JavaScript');
+        });
+
+        // Preferences button
+        document.getElementById('btnPrefs').addEventListener('click', function() {
+            const testKey = 'sample_test';
+            const testValue = 'Hello from JS!';
+
+            xtools.setPreference(testKey, testValue, function(success) {
+                if (success) {
+                    log('Preference saved', 'info');
+
+                    xtools.getPreference(testKey, function(value) {
+                        log(`Preference value: ${value}`, 'info');
+                    });
+                } else {
+                    log('Failed to save preference', 'error');
+                }
+            });
+        });
+
+        // Handle back button
+        xtools.on('backButton', function() {
+            log('Back button pressed', 'warn');
+        });
+
+        // Handle resume
+        xtools.on('resume', function() {
+            log('App resumed', 'info');
+        });
+
+        // Handle pause
+        xtools.on('pause', function() {
+            log('App paused', 'info');
+        });
+
+        // Log errors
+        window.onerror = function(msg, url, line) {
+            log(`Error at ${line}: ${msg}`, 'error');
+        };
+    </script>
 </body>
 </html>

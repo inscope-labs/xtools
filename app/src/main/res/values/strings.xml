@@ -40,4 +40,17 @@
     <string name="error_share_subject">Error Report [%1$s]</string>
     <string name="error_share_chooser_title">Share Diagnostic Report</string>
     <string name="error_share_failed">Failed to share report</string>
+
+    <!-- Layout & Navigation Strings -->
+    <string name="nav_catalog">Catalog</string>
+    <string name="catalog_coming_soon">Catalog coming soon</string>
+    <string name="no_plugins">No Plugins Installed</string>
+    <string name="no_plugins_hint">Load sample plugin or install from catalog</string>
+    <string name="load_sample">Load Sample</string>
+    <string name="about">About</string>
+    <string name="version">Version</string>
+    <string name="developer">Developer</string>
+    <string name="security">Security</string>
+    <string name="security_description">Plugins run in a sandboxed WebView environment with restricted permissions.</string>
+    <string name="plugin_icon">Plugin Icon</string>
 </resources>

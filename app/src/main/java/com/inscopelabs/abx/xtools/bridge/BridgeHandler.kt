@@ -66,12 +66,12 @@ class BridgeHandler(
 
         try {
             when (request.action) {
-                "storage.get" -> {
+                "storage.get", "getPreferences" -> {
                     val key = request.payload.optString("key")
                     val value = securityManager.getEncryptedStorage(activePluginId, key)
                     onResponse(BridgeResponse(request.id, result = value))
                 }
-                "storage.set" -> {
+                "storage.set", "setPreferences" -> {
                     val key = request.payload.optString("key")
                     val value = request.payload.optString("value")
                     securityManager.setEncryptedStorage(activePluginId, key, value)
@@ -128,10 +128,12 @@ class BridgeHandler(
                     onResponse(BridgeResponse(request.id, result = rows))
                 }
 
-                "ui.toast" -> {
+                "ui.toast", "showToast" -> {
                     val message = request.payload.optString("message", "")
+                    val durationStr = request.payload.optString("duration", "short")
+                    val duration = if (durationStr.equals("long", ignoreCase = true)) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, message, duration).show()
                     }
                     onResponse(BridgeResponse(request.id, result = true))
                 }
@@ -157,15 +159,46 @@ class BridgeHandler(
                     onResponse(BridgeResponse(request.id, result = themeObj))
                 }
 
-                "system.getInfo" -> {
+                "system.getInfo", "getDeviceInfo" -> {
                     val info = JSONObject()
+                    info.put("platform", "android")
+                    info.put("platformVersion", Build.VERSION.RELEASE)
                     info.put("manufacturer", Build.MANUFACTURER)
                     info.put("model", Build.MODEL)
                     info.put("release", Build.VERSION.RELEASE)
                     info.put("sdk", Build.VERSION.SDK_INT)
                     info.put("appId", context.packageName)
+                    info.put("language", java.util.Locale.getDefault().language)
                     info.put("time", System.currentTimeMillis())
                     onResponse(BridgeResponse(request.id, result = info))
+                }
+                "getPluginInfo" -> {
+                    val pluginInfo = JSONObject()
+                    pluginInfo.put("id", activePluginId)
+                    pluginInfo.put("name", activePluginId.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() })
+                    pluginInfo.put("version", "1.0.0")
+                    onResponse(BridgeResponse(request.id, result = pluginInfo))
+                }
+                "checkPermission", "requestPermission" -> {
+                    val perm = request.payload.optString("permission", "")
+                    val isGranted = if (perm.isNotBlank()) securityManager.hasPermission(activePluginId, perm) else true
+                    onResponse(BridgeResponse(request.id, result = isGranted))
+                }
+                "openUrl", "navigate" -> {
+                    val url = request.payload.optString("url", "")
+                    log("INFO", "Navigation requested to $url")
+                    onResponse(BridgeResponse(request.id, result = true))
+                }
+                "share" -> {
+                    log("INFO", "Share triggered for plugin $activePluginId")
+                    onResponse(BridgeResponse(request.id, result = true))
+                }
+                "close" -> {
+                    log("INFO", "Close requested for plugin $activePluginId")
+                    onResponse(BridgeResponse(request.id, result = true))
+                }
+                "pickFile" -> {
+                    onResponse(BridgeResponse(request.id, result = null))
                 }
                 "system.sha256" -> {
                     val content = request.payload.optString("content", "")
