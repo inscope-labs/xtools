@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_xs"
-        android:text="Help us improve ABX Server by enabling optional crash and health reports. No personal data is ever collected." />
+        android:text="Help us improve xtools by enabling optional crash and health reports. No personal data is ever collected." />
 
     <View
         style="@style/Widget.Abx.ListRow.Divider"

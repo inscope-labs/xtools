@@ -28,7 +28,7 @@ import com.inscopelabs.abx.xtools.R
  */
 class UserFacingErrorActivity : ComponentActivity() {
     private companion object {
-        const val TAG = "ABX_ERROR_UI"
+        const val TAG = "XTOOLS_ERROR_UI"
 
         const val EXTRA_REFERENCE_CODE = "extra_reference_code"
         const val EXTRA_FULL_REPORT = "extra_full_report"

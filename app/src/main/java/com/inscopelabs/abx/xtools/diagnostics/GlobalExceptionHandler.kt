@@ -47,7 +47,7 @@ class GlobalExceptionHandler(
             val crashReport = buildCrashReport(thread, throwable, referenceCode)
 
             // Log crash structured to our new diagnostic logger
-            Logger.e("ABX_CRASH", "Uncaught exception on thread ${thread.name}: ${throwable.message}", throwable)
+            Logger.e("XTOOLS_CRASH", "Uncaught exception on thread ${thread.name}: ${throwable.message}", throwable)
 
             // Persist the crash report to crash_logs.txt (for error screens)
             writeCrashLog(crashReport)
@@ -58,7 +58,7 @@ class GlobalExceptionHandler(
             launchErrorActivity(throwable, crashReport, referenceCode)
         } catch (e: Exception) {
             try {
-                Log.e("ABX_CRASH", "Exception inside exception handler", e)
+                Log.e("XTOOLS_CRASH", "Exception inside exception handler", e)
             } catch (ignored: Throwable) {}
         }
 
@@ -76,7 +76,7 @@ class GlobalExceptionHandler(
     private var crashActivityLaunched = false
 
     private fun generateReferenceCode(): String =
-        "ABX-" + java.lang.Long.toString(System.currentTimeMillis(), 36).uppercase(Locale.US)
+        "XTOOLS-" + java.lang.Long.toString(System.currentTimeMillis(), 36).uppercase(Locale.US)
 
     private fun launchErrorActivity(throwable: Throwable, fullReport: String, referenceCode: String) {
         val intent = if (BuildConfig.DEBUG) {
@@ -118,7 +118,7 @@ class GlobalExceptionHandler(
 
         return buildString {
             appendLine("====================================================")
-            appendLine("ABX GLOBAL CRASH REPORT")
+            appendLine("XTOOLS GLOBAL CRASH REPORT")
             appendLine("====================================================")
 
             appendLine("Reference Code : $referenceCode")
@@ -198,7 +198,7 @@ class GlobalExceptionHandler(
                 }
             } catch (e: Exception) {
                 try {
-                    Log.e("ABX_CRASH", "Failed to write crash log to file", e)
+                    Log.e("XTOOLS_CRASH", "Failed to write crash log to file", e)
                 } catch (ignored: Throwable) {}
             }
         }

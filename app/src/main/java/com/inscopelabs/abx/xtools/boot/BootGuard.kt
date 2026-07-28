@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 
 object BootGuard {
-    private const val TAG = "ABX_BOOT"
+    private const val TAG = "XTOOLS_BOOT"
     private const val PREFS_NAME = "abx_boot_guard"
 
     // Persistence Keys

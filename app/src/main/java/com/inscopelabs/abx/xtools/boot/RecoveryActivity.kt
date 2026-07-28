@@ -18,7 +18,7 @@ import java.util.Locale
 
 class RecoveryActivity : ComponentActivity() {
     private companion object {
-        const val TAG = "ABX_RECOVERY"
+        const val TAG = "XTOOLS_RECOVERY"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

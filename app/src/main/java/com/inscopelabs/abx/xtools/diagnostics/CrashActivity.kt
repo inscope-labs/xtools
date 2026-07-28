@@ -27,7 +27,7 @@ import com.inscopelabs.abx.xtools.R
  */
 class CrashActivity : ComponentActivity() {
     private companion object {
-        const val TAG = "ABX_CRASH_UI"
+        const val TAG = "XTOOLS_CRASH_UI"
 
         const val EXTRA_EXCEPTION_TYPE = "extra_exception_type"
         const val EXTRA_MESSAGE = "extra_message"
