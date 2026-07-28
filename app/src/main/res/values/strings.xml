@@ -1,3 +1,43 @@
 <resources>
     <string name="app_name">xtools</string>
+    <string name="recovery_unknown_stage">Unknown Stage</string>
+    <string name="recovery_unknown_message">Unknown Error</string>
+    <string name="recovery_copied">Report copied to clipboard</string>
+
+    <!-- Crash Activity Strings -->
+    <string name="crash_title">App Crashed Unexpectedly</string>
+    <string name="crash_subtitle">An unhandled exception caused the application to stop.</string>
+    <string name="crash_type_label">Exception Type</string>
+    <string name="crash_message_label">Message</string>
+    <string name="crash_device_label">Device Metadata</string>
+    <string name="crash_stack_label">Stack Trace</string>
+    <string name="crash_copy_button">Copy Report</string>
+    <string name="crash_restart_button">Restart App</string>
+    <string name="crash_unknown_type">Unknown Exception</string>
+    <string name="crash_unknown_message">No error message provided</string>
+    <string name="crash_copied">Crash report copied to clipboard</string>
+
+    <!-- Recovery Activity Strings -->
+    <string name="recovery_title">System Recovery</string>
+    <string name="recovery_subtitle">A boot failure was detected. Diagnostic details are listed below.</string>
+    <string name="recovery_stage_label">Failure Stage</string>
+    <string name="recovery_message_label">Failure Message</string>
+    <string name="recovery_device_label">Device Info</string>
+    <string name="recovery_stack_label">Stack Trace</string>
+    <string name="recovery_copy_button">Copy Diagnostic Report</string>
+    <string name="recovery_retry_button">Retry / Restart</string>
+
+    <!-- User Error Activity Strings -->
+    <string name="error_title">Something Went Wrong</string>
+    <string name="error_message">An error occurred while processing your request.</string>
+    <string name="error_restart_button">Restart App</string>
+    <string name="error_share_button">Share Error Report</string>
+    <string name="error_fallback_toast">An error occurred displaying the error report.</string>
+    <string name="error_unknown_reference">UNKNOWN</string>
+    <string name="error_reference_format">Reference Code: %1$s</string>
+    <string name="error_restart_failed">Failed to restart application</string>
+    <string name="error_share_body">Reference Code: %1$s\n\n%2$s</string>
+    <string name="error_share_subject">Error Report [%1$s]</string>
+    <string name="error_share_chooser_title">Share Diagnostic Report</string>
+    <string name="error_share_failed">Failed to share report</string>
 </resources>

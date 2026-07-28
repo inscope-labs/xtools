@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TextAppearance.Abx.TitleLarge" parent="android:TextAppearance.Large">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Abx.TitleSmall" parent="android:TextAppearance.Small">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Abx.BodySmall" parent="android:TextAppearance.Small">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="Widget.Abx.ListRow.Divider" parent="android:Widget">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+</resources>
