@@ -74,7 +74,7 @@ jobs:
         continue-on-error: true
 
       - name: Assemble debug APK
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace 2>&1 | tee build.log
 
       - name: Locate APK
         id: apk
@@ -85,6 +85,15 @@ jobs:
             exit 1
           fi
           echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build log artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
