@@ -1,4 +1,4 @@
-package com.example
+package com.inscopelabs.abx.xtools
 
 import org.junit.Assert.*
 import org.junit.Test

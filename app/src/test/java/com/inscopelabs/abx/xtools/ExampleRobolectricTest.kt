@@ -1,7 +1,8 @@
-package com.example
+package com.inscopelabs.abx.xtools
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.inscopelabs.abx.xtools.R
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

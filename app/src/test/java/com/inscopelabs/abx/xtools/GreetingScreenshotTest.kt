@@ -1,4 +1,4 @@
-package com.example
+package com.inscopelabs.abx.xtools
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
