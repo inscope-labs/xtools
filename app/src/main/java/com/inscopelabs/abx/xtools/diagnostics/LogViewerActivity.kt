@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.inscopelabs.abx.xtools.ui.theme.MyApplicationTheme
+import com.inscopelabs.abx.xtools.ui.theme.XToolsTheme
 import java.io.File
 
 class LogViewerActivity : ComponentActivity() {
@@ -36,7 +36,7 @@ class LogViewerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            XToolsTheme {
                 LogViewerScreen(onBack = { finish() })
             }
         }

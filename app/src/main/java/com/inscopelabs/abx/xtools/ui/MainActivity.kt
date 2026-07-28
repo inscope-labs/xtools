@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
-import com.inscopelabs.abx.xtools.ui.theme.MyApplicationTheme
+import com.inscopelabs.abx.xtools.ui.theme.XToolsTheme
 import com.inscopelabs.abx.xtools.bridge.BridgeHandler
 import com.inscopelabs.abx.xtools.bridge.JsBridge
 import com.inscopelabs.abx.xtools.plugin.manager.PluginManager
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         pluginManager = PluginManager(applicationContext, securityManager)
 
         setContent {
-            MyApplicationTheme {
+            XToolsTheme {
                 XToolsApp(
                     pluginManager = pluginManager,
                     securityManager = securityManager,
