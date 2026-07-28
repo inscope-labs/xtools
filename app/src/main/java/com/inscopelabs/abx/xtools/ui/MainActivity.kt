@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         securityManager = SecurityManager(applicationContext)
         bridgeHandler = BridgeHandler(applicationContext, securityManager)
         jsBridge = JsBridge(bridgeHandler, lifecycleScope)
-        pluginManager = PluginManager(applicationContext, securityManager)
+        pluginManager = PluginManager.getInstance(applicationContext)
 
         setContent {
             XToolsTheme {

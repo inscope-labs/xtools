@@ -1,49 +1,35 @@
 package com.inscopelabs.abx.xtools.bridge
 
-import org.json.JSONObject
+import com.google.gson.annotations.SerializedName
 
-data class BridgeRequest(
+/**
+ * BridgeMessage represents the message structure for communication
+ * between JavaScript and Kotlin through the WebView bridge.
+ */
+data class BridgeMessage(
+    @SerializedName("id")
     val id: String,
+
+    @SerializedName("action")
     val action: String,
-    val payload: JSONObject
+
+    @SerializedName("params")
+    val params: Map<String, Any>? = null,
+
+    @SerializedName("timestamp")
+    val timestamp: Long = System.currentTimeMillis()
 ) {
     companion object {
-        fun fromJson(jsonStr: String): BridgeRequest {
-            val obj = JSONObject(jsonStr)
-            return BridgeRequest(
-                id = obj.optString("id", ""),
-                action = obj.optString("action", ""),
-                payload = obj.optJSONObject("payload") ?: JSONObject()
-            )
-        }
+        const val ACTION_GET_DEVICE_INFO = "getDeviceInfo"
+        const val ACTION_SHOW_TOAST = "showToast"
+        const val ACTION_GET_PREFERENCES = "getPreferences"
+        const val ACTION_SET_PREFERENCES = "setPreferences"
+        const val ACTION_PICK_FILE = "pickFile"
+        const val ACTION_LOG = "log"
+        const val ACTION_NAVIGATE = "navigate"
+        const val ACTION_CLOSE = "close"
+        const val ACTION_GET_PLUGIN_INFO = "getPluginInfo"
+        const val ACTION_REQUEST_PERMISSION = "requestPermission"
+        const val ACTION_CHECK_PERMISSION = "checkPermission"
     }
 }
-
-data class BridgeResponse(
-    val id: String,
-    val result: Any? = null,
-    val error: String? = null
-) {
-    fun toJson(): String {
-        val obj = JSONObject()
-        obj.put("id", id)
-        if (error != null) {
-            obj.put("error", error)
-        } else {
-            when (result) {
-                is JSONObject -> obj.put("result", result)
-                is Map<*, *> -> obj.put("result", JSONObject(result as Map<String, Any?>))
-                else -> obj.put("result", result)
-            }
-        }
-        return obj.toString()
-    }
-}
-
-data class ConsoleLogEntry(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val level: String, // "LOG", "WARN", "ERROR", "INFO"
-    val message: String,
-    val timestamp: Long = System.currentTimeMillis(),
-    val pluginId: String = "system"
-)

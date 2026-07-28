@@ -55,6 +55,7 @@ android {
   buildFeatures {
     compose = true
     buildConfig = true
+    viewBinding = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
@@ -87,6 +88,9 @@ dependencies {
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
   implementation(libs.google.material)
+  implementation(libs.gson)
+  implementation(libs.androidx.webkit)
+  implementation(libs.androidx.security.crypto)
   // implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
