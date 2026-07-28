@@ -1,4 +1,4 @@
-package com.example.ui.theme
+package com.inscopelabs.abx.xtools.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
