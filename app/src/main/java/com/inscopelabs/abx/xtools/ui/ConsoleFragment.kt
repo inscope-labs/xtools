@@ -10,6 +10,7 @@ import com.inscopelabs.abx.xtools.ui.category.CategoryContent
 import com.inscopelabs.abx.xtools.ui.category.CategoryFragment
 import com.inscopelabs.abx.xtools.ui.category.FeatureItem
 import com.inscopelabs.abx.xtools.ui.category.FeatureSection
+import com.inscopelabs.abx.xtools.ui.feature.FeatureFragment
 
 class ConsoleFragment : Fragment() {
 
@@ -19,6 +20,15 @@ class ConsoleFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_console_container, container, false)
+    }
+
+    override fun onAttachFragment(childFragment: Fragment) {
+        super.onAttachFragment(childFragment)
+        if (childFragment is CategoryFragment) {
+            childFragment.onFeatureClickListener = { featureItem ->
+                openFeature(featureItem)
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -75,9 +85,22 @@ class ConsoleFragment : Fragment() {
                 )
             )
 
+            val categoryFragment = CategoryFragment.newInstance(consoleData)
+            categoryFragment.onFeatureClickListener = { featureItem ->
+                openFeature(featureItem)
+            }
+
             childFragmentManager.beginTransaction()
-                .replace(R.id.childContainer, CategoryFragment.newInstance(consoleData))
+                .replace(R.id.childContainer, categoryFragment)
                 .commit()
         }
+    }
+
+    private fun openFeature(item: FeatureItem) {
+        val featureFragment = FeatureFragment.newInstance(item.id, item.title)
+        childFragmentManager.beginTransaction()
+            .replace(R.id.childContainer, featureFragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

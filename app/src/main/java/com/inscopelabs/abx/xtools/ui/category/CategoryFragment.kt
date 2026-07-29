@@ -13,6 +13,7 @@ class CategoryFragment : Fragment() {
 
     private var categoryContents: ArrayList<CategoryContent> = arrayListOf()
     private var adapter: SectionedFeatureAdapter? = null
+    var onFeatureClickListener: ((FeatureItem) -> Unit)? = null
 
     companion object {
         private const val ARG_CATEGORIES = "arg_categories"
@@ -48,7 +49,7 @@ class CategoryFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
 
         adapter = SectionedFeatureAdapter { featureItem ->
-            // Feature row click callback - wired in prompt 3
+            onFeatureClickListener?.invoke(featureItem)
         }
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())

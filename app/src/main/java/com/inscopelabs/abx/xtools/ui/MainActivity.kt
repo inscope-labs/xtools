@@ -16,6 +16,7 @@ import com.inscopelabs.abx.xtools.bridge.BridgeHandler
 import com.inscopelabs.abx.xtools.bridge.JsBridge
 import com.inscopelabs.abx.xtools.plugin.manager.PluginManager
 import com.inscopelabs.abx.xtools.plugin.manager.SecurityManager
+import com.inscopelabs.abx.xtools.ui.feature.FeatureFragment
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -54,16 +55,20 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .add(R.id.pluginsContainer, PluginsFragment(), TAG_PLUGINS)
                 .add(R.id.consoleContainer, ConsoleFragment(), TAG_CONSOLE)
-                .commit()
+                .commitNow()
         }
 
+        setupContainerBackStackListeners()
+
         updateSwitchState(isPluginsActive)
+        updateToolbarForCurrentContainer()
 
         pillModeSwitch.setOnToggleListener { active ->
             isPluginsActive = active
             pluginsContainer.isVisible = isPluginsActive
             consoleContainer.isVisible = !isPluginsActive
             updateSwitchState(isPluginsActive)
+            updateToolbarForCurrentContainer()
         }
 
         observeToolbarState()
@@ -76,6 +81,36 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun setupContainerBackStackListeners() {
+        val pluginsFrag = supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
+        val consoleFrag = supportFragmentManager.findFragmentByTag(TAG_CONSOLE)
+
+        pluginsFrag?.childFragmentManager?.addOnBackStackChangedListener {
+            updateToolbarForCurrentContainer()
+        }
+        consoleFrag?.childFragmentManager?.addOnBackStackChangedListener {
+            updateToolbarForCurrentContainer()
+        }
+    }
+
+    private fun updateToolbarForCurrentContainer() {
+        val activeFragment = if (isPluginsActive) {
+            supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
+        } else {
+            supportFragmentManager.findFragmentByTag(TAG_CONSOLE)
+        }
+        val childFm = activeFragment?.childFragmentManager
+        if (childFm != null && childFm.backStackEntryCount > 0) {
+            val topFragment = childFm.findFragmentById(R.id.childContainer)
+            val title = (topFragment as? FeatureFragment)?.getFeatureTitle()
+                ?: topFragment?.arguments?.getString("arg_feature_title")
+                ?: "Feature"
+            toolbarViewModel.setToolbarState(ToolbarState.Feature(title))
+        } else {
+            toolbarViewModel.setToolbarState(ToolbarState.Branded)
+        }
     }
 
     private fun updateSwitchState(pluginsActive: Boolean) {
@@ -121,7 +156,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun popActiveBackStack(): Boolean {
-        val activeFragment = if (pluginsContainer.isVisible) {
+        val activeFragment = if (isPluginsActive) {
             supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
         } else {
             supportFragmentManager.findFragmentByTag(TAG_CONSOLE)
