@@ -6,6 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.ui.category.CategoryContent
+import com.inscopelabs.abx.xtools.ui.category.CategoryFragment
+import com.inscopelabs.abx.xtools.ui.category.FeatureItem
+import com.inscopelabs.abx.xtools.ui.category.FeatureSection
 
 class PluginsFragment : Fragment() {
 
@@ -20,8 +24,83 @@ class PluginsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (savedInstanceState == null) {
+            val pluginsData = arrayListOf(
+                CategoryContent(
+                    categoryName = "Active",
+                    sections = listOf(
+                        FeatureSection(
+                            title = "Installed Plugins",
+                            items = listOf(
+                                FeatureItem(
+                                    id = "database",
+                                    title = "SQLite Database CRUD",
+                                    statusText = "Running • v1.0.0",
+                                    statusIsPositive = true,
+                                    iconRes = R.drawable.ic_plugins
+                                ),
+                                FeatureItem(
+                                    id = "system-info",
+                                    title = "System Information",
+                                    statusText = "Running • v1.0.0",
+                                    statusIsPositive = true,
+                                    iconRes = R.drawable.ic_plugins
+                                ),
+                                FeatureItem(
+                                    id = "sample",
+                                    title = "Sample Plugin",
+                                    statusText = "Ready • v1.0.0",
+                                    statusIsPositive = true,
+                                    iconRes = R.drawable.ic_plugins
+                                )
+                            )
+                        )
+                    )
+                ),
+                CategoryContent(
+                    categoryName = "Settings",
+                    sections = listOf(
+                        FeatureSection(
+                            title = "General",
+                            items = listOf(
+                                FeatureItem(
+                                    id = "plugin-security",
+                                    title = "Plugin Security & Permissions",
+                                    statusText = "Enforced",
+                                    statusIsPositive = true,
+                                    iconRes = R.drawable.ic_plugins
+                                ),
+                                FeatureItem(
+                                    id = "storage-quota",
+                                    title = "Storage Quotas",
+                                    statusText = "Unrestricted",
+                                    statusIsPositive = true,
+                                    iconRes = R.drawable.ic_plugins
+                                )
+                            )
+                        )
+                    )
+                ),
+                CategoryContent(
+                    categoryName = "Dashboard",
+                    sections = listOf(
+                        FeatureSection(
+                            title = "Overview",
+                            items = listOf(
+                                FeatureItem(
+                                    id = "active-count",
+                                    title = "Active Plugins Overview",
+                                    statusText = "3 plugins loaded",
+                                    statusIsPositive = true,
+                                    iconRes = R.drawable.ic_plugins
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+
             childFragmentManager.beginTransaction()
-                .replace(R.id.childContainer, PlaceholderFragment.newInstance("Plugins"))
+                .replace(R.id.childContainer, CategoryFragment.newInstance(pluginsData))
                 .commit()
         }
     }
