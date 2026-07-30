@@ -47,10 +47,18 @@ data class SchemaValidationResult(
     val errorMessage: String? = null
 )
 
-class DefaultSchemaValidator : JsonSchemaValidator {
-    @NotYetWired("JSON schema validation will be fully wired in Phase 1 Stage 1.3")
+class DefaultSchemaValidator(
+    private val framework: com.inscopelabs.abx.xtools.security.BridgeValidationFramework = com.inscopelabs.abx.xtools.security.BridgeValidationFramework()
+) : JsonSchemaValidator {
     override fun validatePayload(action: String, payloadJsonStr: String): SchemaValidationResult {
-        return SchemaValidationResult(isValid = true)
+        return when (val result = framework.validatePayload(action, payloadJsonStr)) {
+            is com.inscopelabs.abx.xtools.security.BridgeValidationFramework.ValidationResult.Valid -> {
+                SchemaValidationResult(isValid = true)
+            }
+            is com.inscopelabs.abx.xtools.security.BridgeValidationFramework.ValidationResult.Invalid -> {
+                SchemaValidationResult(isValid = false, errorMessage = result.reason)
+            }
+        }
     }
 }
 
