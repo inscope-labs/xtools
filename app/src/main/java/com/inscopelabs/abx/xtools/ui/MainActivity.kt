@@ -12,14 +12,25 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.appbar.MaterialToolbar
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.XToolsApplication
 import com.inscopelabs.abx.xtools.bridge.BridgeHandler
 import com.inscopelabs.abx.xtools.bridge.JsBridge
+import com.inscopelabs.abx.xtools.kernel.RuntimeKernel
 import com.inscopelabs.abx.xtools.plugin.manager.PluginManager
 import com.inscopelabs.abx.xtools.plugin.manager.SecurityManager
 import com.inscopelabs.abx.xtools.ui.feature.FeatureFragment
 import kotlinx.coroutines.launch
 
+/**
+ * Main activity container for the xtools host UI.
+ * Hosts the bottom navigation and coordinates fragment transactions.
+ * Jetpack Compose is NOT used – everything is XML/Fragment-based.
+ *
+ * @see §3.1.1, §3.1.1 Step 2.1.1
+ */
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var runtimeKernel: RuntimeKernel
 
     private val toolbarViewModel: ToolbarStateViewModel by viewModels()
 
@@ -40,6 +51,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // In a real implementation, this would be injected via DI or application context.
+        runtimeKernel = (application as XToolsApplication).runtimeKernel
+
         securityManager = SecurityManager(applicationContext)
         bridgeHandler = BridgeHandler(applicationContext, securityManager)
         jsBridge = JsBridge(bridgeHandler, lifecycleScope)
@@ -57,6 +71,9 @@ class MainActivity : AppCompatActivity() {
                 .add(R.id.consoleContainer, ConsoleFragment(), TAG_CONSOLE)
                 .commitNow()
         }
+
+        setupBottomNavigation()
+        applyTheme()
 
         setupContainerBackStackListeners()
 
@@ -170,10 +187,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupBottomNavigation() {
+        // Real implementation will use setOnItemSelectedListener to switch fragments.
+        // Stub: bottom navigation is defined in res/menu/bottom_nav_menu.xml.
+    }
+
+    private fun applyTheme() {
+        // Delegates to ThemeManager for dynamic Material You colors.
+        ThemeManager.applyTheme(this)
+    }
+
     fun navigateToPluginDetail(pluginId: String) {
         val fragment = com.inscopelabs.abx.xtools.ui.plugindetail.PluginDetailFragment.newInstance(pluginId)
         supportFragmentManager.beginTransaction()
-            .replace(R.id.pluginsContainer, fragment)
+            .replace(R.id.pluginsContainer, fragment, "plugin_detail")
             .addToBackStack(null)
             .commit()
     }
