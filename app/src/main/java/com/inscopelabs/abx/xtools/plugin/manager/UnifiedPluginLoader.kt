@@ -15,7 +15,18 @@ sealed class PluginLoadResult {
         val baseUrl: String
     ) : PluginLoadResult()
 
-    data class Error(val reason: String) : PluginLoadResult()
+    open class Error(open val reason: String) : PluginLoadResult() {
+        override fun equals(other: Any?): Boolean = other is Error && reason == other.reason
+        override fun hashCode(): Int = reason.hashCode()
+        override fun toString(): String = "Error(reason='$reason')"
+    }
+
+    data class Unsigned(
+        val manifest: PluginManifest,
+        val contentHtml: String,
+        val baseUrl: String,
+        override val reason: String = "Plugin is unsigned and requires explicit user authorization"
+    ) : Error(reason)
 }
 
 interface PluginLoaderStrategy {
@@ -69,20 +80,6 @@ class ProductionPluginLoader(private val context: Context) : PluginLoaderStrateg
             val manifestJson = manifestFile.readText()
             val manifest = manifestParser.parse(manifestJson)
 
-            // Validate signature if present
-            if (!manifest.signature.isNullOrBlank()) {
-                val mockCert = java.security.cert.CertificateFactory.getInstance("X.509")
-                    .generateCertificate("-----BEGIN CERTIFICATE-----\nMIIC+DCCA...\n-----END CERTIFICATE-----".byteInputStream())
-                val signatureValid = pluginIdentity.verifySignature(
-                    manifestJson.toByteArray(),
-                    manifest.signature.toByteArray(),
-                    mockCert
-                )
-                if (!signatureValid) {
-                    return@withContext PluginLoadResult.Error("Signature verification failed for plugin: $pluginId")
-                }
-            }
-
             val entryFileName = if (manifest.entryPoint.isNotBlank()) manifest.entryPoint else "index.html"
             val entryFile = File(pluginDir, entryFileName)
             if (!entryFile.exists()) {
@@ -91,6 +88,36 @@ class ProductionPluginLoader(private val context: Context) : PluginLoaderStrateg
 
             val htmlContent = entryFile.readText()
             val baseUrl = "file://${pluginDir.absolutePath}/"
+
+            if (manifest.signature.isNullOrBlank()) {
+                // Surface distinct Unsigned result instead of silently treating unsigned as verified Success
+                return@withContext PluginLoadResult.Unsigned(manifest, htmlContent, baseUrl)
+            }
+
+            // Source real certificate from plugin package alongside manifest
+            val certFile = listOf("plugin.crt", "certificate.pem", "cert.pem", "cert.crt")
+                .map { File(pluginDir, it) }
+                .firstOrNull { it.exists() }
+                ?: return@withContext PluginLoadResult.Error(
+                    "Signing certificate missing for signed plugin '$pluginId'. Expected cert file (e.g. plugin.crt or certificate.pem) in plugin directory."
+                )
+
+            val certificate = try {
+                certFile.inputStream().use { stream ->
+                    java.security.cert.CertificateFactory.getInstance("X.509").generateCertificate(stream)
+                }
+            } catch (e: Exception) {
+                return@withContext PluginLoadResult.Error("Failed to parse signing certificate for plugin '$pluginId': ${e.message}")
+            }
+
+            val signatureValid = pluginIdentity.verifySignature(
+                manifestJson.toByteArray(),
+                manifest.signature.toByteArray(),
+                certificate
+            )
+            if (!signatureValid) {
+                return@withContext PluginLoadResult.Error("Signature verification failed for plugin: $pluginId")
+            }
 
             PluginLoadResult.Success(manifest, htmlContent, baseUrl)
         } catch (e: Exception) {
@@ -110,14 +137,14 @@ class UnifiedPluginLoader(
     override suspend fun loadPlugin(pluginId: String): PluginLoadResult {
         return if (isDevelopmentMode) {
             val devResult = devLoader.loadPlugin(pluginId)
-            if (devResult is PluginLoadResult.Success) {
+            if (devResult is PluginLoadResult.Success || devResult is PluginLoadResult.Unsigned) {
                 devResult
             } else {
                 prodLoader.loadPlugin(pluginId)
             }
         } else {
             val prodResult = prodLoader.loadPlugin(pluginId)
-            if (prodResult is PluginLoadResult.Success) {
+            if (prodResult is PluginLoadResult.Success || prodResult is PluginLoadResult.Unsigned) {
                 prodResult
             } else {
                 devLoader.loadPlugin(pluginId)

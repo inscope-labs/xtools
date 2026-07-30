@@ -45,7 +45,14 @@ class CspPolicy {
             val hasStorage = grantedPermissions.contains("storage")
             val imgSrc = if (hasStorage) "'self' data: blob:" else "'self' data:"
 
-            return "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src $imgSrc; connect-src $connectSrc;"
+            // 'unsafe-inline' is only included if explicitly authorized by granted permissions
+            val allowInlineScripts = grantedPermissions.contains("ui.inline_scripts") || grantedPermissions.contains("unsafe_inline")
+            val allowInlineStyles = grantedPermissions.contains("ui.inline_styles") || grantedPermissions.contains("unsafe_inline") || grantedPermissions.contains("ui.inline_scripts")
+
+            val scriptSrc = if (allowInlineScripts) "'self' 'unsafe-inline'" else "'self'"
+            val styleSrc = if (allowInlineStyles) "'self' 'unsafe-inline'" else "'self'"
+
+            return "default-src 'self'; script-src $scriptSrc; style-src $styleSrc; img-src $imgSrc; connect-src $connectSrc;"
         }
     }
 }
