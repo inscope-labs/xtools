@@ -23,7 +23,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Main activity container for the xtools host UI.
- * Hosts the bottom navigation and coordinates fragment transactions.
+ * Manages the dual-container layout (Plugins and Console) toggled via a pill mode switch
+ * and coordinates child fragment transactions within each container.
  * Jetpack Compose is NOT used – everything is XML/Fragment-based.
  *
  * @see §3.1.1, §3.1.1 Step 2.1.1
@@ -72,7 +73,6 @@ class MainActivity : AppCompatActivity() {
                 .commitNow()
         }
 
-        setupBottomNavigation()
         applyTheme()
 
         setupContainerBackStackListeners()
@@ -123,7 +123,9 @@ class MainActivity : AppCompatActivity() {
             val topFragment = childFm.findFragmentById(R.id.childContainer)
             val title = (topFragment as? FeatureFragment)?.getFeatureTitle()
                 ?: topFragment?.arguments?.getString("arg_feature_title")
-                ?: "Feature"
+                ?: if (topFragment is com.inscopelabs.abx.xtools.ui.plugindetail.PluginDetailFragment) "Plugin Details"
+                else if (topFragment is com.inscopelabs.abx.xtools.ui.settings.AppearanceFragment) "Settings"
+                else "Feature"
             toolbarViewModel.setToolbarState(ToolbarState.Feature(title))
         } else {
             toolbarViewModel.setToolbarState(ToolbarState.Branded)
@@ -187,30 +189,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupBottomNavigation() {
-        // Real implementation will use setOnItemSelectedListener to switch fragments.
-        // Stub: bottom navigation is defined in res/menu/bottom_nav_menu.xml.
-    }
-
     private fun applyTheme() {
         // Delegates to ThemeManager for dynamic Material You colors.
         ThemeManager.applyTheme(this)
     }
 
     fun navigateToPluginDetail(pluginId: String) {
+        val pluginsFrag = supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
         val fragment = com.inscopelabs.abx.xtools.ui.plugindetail.PluginDetailFragment.newInstance(pluginId)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.pluginsContainer, fragment, "plugin_detail")
-            .addToBackStack(null)
-            .commit()
+        pluginsFrag?.childFragmentManager?.beginTransaction()
+            ?.replace(R.id.childContainer, fragment)
+            ?.addToBackStack(null)
+            ?.commit()
     }
 
     fun navigateToSettings() {
+        val pluginsFrag = supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
         val fragment = com.inscopelabs.abx.xtools.ui.settings.AppearanceFragment()
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.pluginsContainer, fragment)
-            .addToBackStack(null)
-            .commit()
+        pluginsFrag?.childFragmentManager?.beginTransaction()
+            ?.replace(R.id.childContainer, fragment)
+            ?.addToBackStack(null)
+            ?.commit()
     }
 
     companion object {
