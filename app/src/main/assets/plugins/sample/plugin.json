@@ -1,22 +1,13 @@
 {
-  "id": "sample",
-  "name": "Sample Plugin",
+  "id": "com.inscopelabs.xtools.sample.fileviewer",
+  "name": "File Viewer & Storage Plugin",
   "version": "1.0.0",
-  "description": "A sample xtools plugin demonstrating the bridge API",
+  "description": "Demonstrates Storage namespace bridge API (read, write, list, createDirectory, deleteFile)",
   "author": "xtools",
   "entryPoint": "index.html",
-  "permissions": [],
-  "minHostVersion": "1.0.0",
-  "sandbox": {
-    "enabled": true,
-    "networkAccess": true,
-    "fileAccess": false,
-    "maxExecutionTime": 30000,
-    "maxMemoryMB": 128
-  },
-  "capabilities": [
-    "toast",
-    "device-info",
-    "preferences"
+  "permissions": [
+    "storage",
+    "ui",
+    "system"
   ]
 }

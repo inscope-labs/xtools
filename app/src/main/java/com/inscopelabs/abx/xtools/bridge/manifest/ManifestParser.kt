@@ -19,7 +19,7 @@ class ManifestParser {
             if (manifest.id.isBlank()) {
                 throw BridgeError(BridgeErrorCodes.INVALID_PARAMS, "Missing plugin ID")
             }
-            if (!manifest.id.matches(reverseDomainRegex) && manifest.id != "system" && !manifest.id.contains("sample")) {
+            if (!manifest.id.matches(reverseDomainRegex) && manifest.id != "system") {
                 throw BridgeError(BridgeErrorCodes.INVALID_PARAMS, "Invalid plugin ID format (must be reverse-domain like com.example.plugin): ${manifest.id}")
             }
             if (manifest.version.isBlank()) {

@@ -19,6 +19,12 @@ import java.io.ByteArrayInputStream
  * SecureWebView provides a hardened WebView configuration
  * with security best practices enabled.
  */
+enum class PluginTrustLevel {
+    UNTRUSTED,
+    SANDBOXED,
+    TRUSTED
+}
+
 @SuppressLint("SetJavaScriptEnabled")
 class SecureWebView(context: Context) : WebView(context) {
 
@@ -28,6 +34,8 @@ class SecureWebView(context: Context) : WebView(context) {
     }
 
     var navigationInterceptor: NavigationInterceptor? = null
+    var trustLevel: PluginTrustLevel = PluginTrustLevel.SANDBOXED
+        private set
 
     private val debugLogger = DebugConsoleLogger()
 
@@ -36,6 +44,23 @@ class SecureWebView(context: Context) : WebView(context) {
         setupWebViewClient()
         setupCookieManager()
         setupWebViewDatabase(context)
+        setupSafeBrowsing(context)
+    }
+
+    fun setPluginTrustLevel(level: PluginTrustLevel) {
+        this.trustLevel = level
+        // Gate content:// URL access strictly behind TRUSTED level
+        settings.allowContentAccess = (level == PluginTrustLevel.TRUSTED)
+    }
+
+    private fun setupSafeBrowsing(context: Context) {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.START_SAFE_BROWSING)) {
+            WebViewCompat.startSafeBrowsing(context) { success ->
+                if (!success) {
+                    debugLogger.logError("Safe Browsing initialization failed")
+                }
+            }
+        }
     }
 
     private fun setupSecureSettings() {

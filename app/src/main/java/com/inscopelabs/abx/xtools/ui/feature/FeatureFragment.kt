@@ -8,18 +8,27 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.kernel.session.PluginSession
+import com.inscopelabs.abx.xtools.kernel.session.SessionManager
+import com.inscopelabs.abx.xtools.plugin.manager.PluginLoadResult
+import com.inscopelabs.abx.xtools.plugin.manager.UnifiedPluginLoader
 import com.inscopelabs.abx.xtools.webview.SecureWebView
+import kotlinx.coroutines.launch
 
 class FeatureFragment : Fragment() {
 
     private var featureId: String? = null
     private var featureTitle: String? = null
     private var secureWebView: SecureWebView? = null
+    private var currentSession: PluginSession? = null
+    private val sessionManager = SessionManager()
 
     companion object {
         private const val ARG_FEATURE_ID = "arg_feature_id"
         private const val ARG_FEATURE_TITLE = "arg_feature_title"
+        private const val KEY_WEBVIEW_STATE = "key_webview_state"
 
         fun newInstance(id: String, title: String): FeatureFragment {
             return FeatureFragment().apply {
@@ -33,8 +42,8 @@ class FeatureFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        featureId = arguments?.getString(ARG_FEATURE_ID)
-        featureTitle = arguments?.getString(ARG_FEATURE_TITLE)
+        featureId = savedInstanceState?.getString(ARG_FEATURE_ID) ?: arguments?.getString(ARG_FEATURE_ID)
+        featureTitle = savedInstanceState?.getString(ARG_FEATURE_TITLE) ?: arguments?.getString(ARG_FEATURE_TITLE)
     }
 
     fun getFeatureTitle(): String {
@@ -63,14 +72,14 @@ class FeatureFragment : Fragment() {
         titleText.text = "Feature: $title"
         idText.text = "ID: $id"
 
-        val assetPluginPath = when (id) {
-            "sample" -> "plugins/sample/index.html"
-            "database", "sqlite-crud" -> "plugins/database/index.html"
-            "system-info" -> "plugins/system-info/index.html"
+        val targetPluginDir = when (id) {
+            "sample", "com.inscopelabs.xtools.sample.fileviewer" -> "sample"
+            "database", "sqlite-crud", "com.inscopelabs.xtools.plugin.contextbuilder" -> "database"
+            "system-info", "com.inscopelabs.xtools.plugin.sysinfo" -> "system-info"
             else -> null
         }
 
-        if (assetPluginPath != null) {
+        if (targetPluginDir != null) {
             placeholderContainer.visibility = View.GONE
             webViewContainer.visibility = View.VISIBLE
 
@@ -84,20 +93,68 @@ class FeatureFragment : Fragment() {
                 )
             )
 
-            try {
-                val baseUrl = "file:///android_asset/${assetPluginPath.substringBeforeLast("/")}/"
-                val inputStream = requireContext().assets.open(assetPluginPath)
-                val htmlContent = inputStream.bufferedReader().use { it.readText() }
-                webView.loadDataWithBaseURL(baseUrl, htmlContent, "text/html", "utf-8", null)
-            } catch (e: Exception) {
-                placeholderContainer.visibility = View.VISIBLE
-                webViewContainer.visibility = View.GONE
-                idText.text = "Failed to load plugin asset: ${e.message}"
+            // Start plugin session in SessionManager
+            val pluginId = when (targetPluginDir) {
+                "sample" -> "com.inscopelabs.xtools.sample.fileviewer"
+                "database" -> "com.inscopelabs.xtools.plugin.contextbuilder"
+                "system-info" -> "com.inscopelabs.xtools.plugin.sysinfo"
+                else -> targetPluginDir
+            }
+            currentSession = sessionManager.createSession(pluginId)
+
+            val webViewState = savedInstanceState?.getBundle(KEY_WEBVIEW_STATE)
+            if (webViewState != null) {
+                webView.restoreState(webViewState)
+            } else {
+                lifecycleScope.launch {
+                    val loader = UnifiedPluginLoader(requireContext(), isDevelopmentMode = true)
+                    when (val result = loader.loadPlugin(targetPluginDir)) {
+                        is PluginLoadResult.Success -> {
+                            webView.loadDataWithBaseURL(
+                                result.baseUrl,
+                                result.contentHtml,
+                                "text/html",
+                                "utf-8",
+                                null
+                            )
+                        }
+                        is PluginLoadResult.Error -> {
+                            placeholderContainer.visibility = View.VISIBLE
+                            webViewContainer.visibility = View.GONE
+                            idText.text = "Failed to load plugin: ${result.reason}"
+                        }
+                    }
+                }
             }
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(ARG_FEATURE_ID, featureId)
+        outState.putString(ARG_FEATURE_TITLE, featureTitle)
+        secureWebView?.let { webView ->
+            val webViewState = Bundle()
+            webView.saveState(webViewState)
+            outState.putBundle(KEY_WEBVIEW_STATE, webViewState)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        secureWebView?.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        secureWebView?.onPause()
+    }
+
     override fun onDestroyView() {
+        currentSession?.let { session ->
+            sessionManager.closeSession(session.id)
+            currentSession = null
+        }
         secureWebView?.destroy()
         secureWebView = null
         super.onDestroyView()

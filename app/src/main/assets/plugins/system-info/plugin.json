@@ -3,8 +3,7 @@
   "name": "System & Network Inspector",
   "version": "1.0.0",
   "author": "Inscope Labs",
-  "description": "Monitors device specs, OS details, memory, and performs sandboxed HTTP requests.",
-  "entry": "index.html",
-  "permissions": ["system", "http", "ui"],
-  "checksum": "8b1a9953c4611296a827abf8c47804d7"
+  "description": "Monitors device specs, OS details, memory, and system preferences via System namespace bridge API.",
+  "entryPoint": "index.html",
+  "permissions": ["system", "ui"]
 }

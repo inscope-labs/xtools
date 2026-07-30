@@ -13,6 +13,7 @@ data class PluginManifest(
     val name: String,
     val description: String? = null,
     val author: String? = null,
+    val entryPoint: String = "index.html",
     val permissions: List<String> = emptyList(),
     val services: List<ServiceDefinition> = emptyList(),
     @SerializedName("capabilities") val capabilities: List<String> = emptyList(),
