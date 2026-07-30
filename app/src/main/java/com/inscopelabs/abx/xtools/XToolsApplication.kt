@@ -1,10 +1,12 @@
 package com.inscopelabs.abx.xtools
 
 import android.app.Application
+import com.inscopelabs.abx.xtools.bridge.api.BridgeApiFacade
 import com.inscopelabs.abx.xtools.diagnostics.DiagnosticsInitializer
 import com.inscopelabs.abx.xtools.diagnostics.GlobalExceptionHandler
 import com.inscopelabs.abx.xtools.kernel.RuntimeKernel
 import com.inscopelabs.abx.xtools.kernel.dispatcher.BridgeDispatcher
+import com.inscopelabs.abx.xtools.kernel.dispatcher.handlers.DefaultHandlerRegistry
 import com.inscopelabs.abx.xtools.kernel.event.EventBus
 import com.inscopelabs.abx.xtools.kernel.mode.GovernedLayerManager
 import com.inscopelabs.abx.xtools.kernel.mode.GovernanceSessionValidator
@@ -28,6 +30,14 @@ class XToolsApplication : Application() {
     lateinit var runtimeKernel: RuntimeKernel
         private set
 
+    lateinit var bridgeApiFacade: BridgeApiFacade
+        private set
+
+    val sessionManager: SessionManager get() = runtimeKernel.sessionManager
+    val permissionManager: PermissionManager get() = runtimeKernel.permissionManager
+    val bridgeDispatcher: BridgeDispatcher get() = runtimeKernel.bridgeDispatcher
+    val modeArbiter: ModeArbiter get() = runtimeKernel.modeArbiter
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -43,9 +53,10 @@ class XToolsApplication : Application() {
     }
 
     private fun initRuntimeKernel() {
-        val permissionManager = PermissionManager()
         val eventBus = EventBus(CoroutineScope(Dispatchers.Default + SupervisorJob()))
         val pluginRegistry = PluginRegistry()
+        val sessionManager = SessionManager()
+
         val standaloneManager = object : StandaloneLayerManager {
             override fun revokeAllHandles(reason: String) {}
             override fun restoreAllHandles() {}
@@ -59,10 +70,17 @@ class XToolsApplication : Application() {
             override fun validate(token: ModeArbiter.SessionToken) = ValidationResult(false)
         }
         val modeArbiter = ModeArbiter(sessionValidator, transitionEnforcer)
+
+        val permissionManager = PermissionManager(modeArbiter)
         val bridgeDispatcher = BridgeDispatcher(permissionManager)
 
+        // Register default bridge action handlers
+        DefaultHandlerRegistry.registerDefaultHandlers(bridgeDispatcher, this, modeArbiter)
+
+        bridgeApiFacade = BridgeApiFacade(bridgeDispatcher)
+
         runtimeKernel = RuntimeKernel(
-            sessionManager = SessionManager(),
+            sessionManager = sessionManager,
             permissionManager = permissionManager,
             eventBus = eventBus,
             pluginRegistry = pluginRegistry,
@@ -86,3 +104,4 @@ class XToolsApplication : Application() {
             private set
     }
 }
+

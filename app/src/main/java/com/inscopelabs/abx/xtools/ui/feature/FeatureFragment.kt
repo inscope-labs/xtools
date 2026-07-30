@@ -10,6 +10,8 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.bridge.JsBridge
 import com.inscopelabs.abx.xtools.kernel.session.PluginSession
 import com.inscopelabs.abx.xtools.kernel.session.SessionManager
 import com.inscopelabs.abx.xtools.plugin.manager.PluginLoadResult
@@ -22,8 +24,14 @@ class FeatureFragment : Fragment() {
     private var featureId: String? = null
     private var featureTitle: String? = null
     private var secureWebView: SecureWebView? = null
+    private var jsBridge: JsBridge? = null
     private var currentSession: PluginSession? = null
-    private val sessionManager = SessionManager()
+
+    private val app: XToolsApplication
+        get() = requireActivity().application as XToolsApplication
+
+    private val sessionManager: SessionManager
+        get() = app.sessionManager
 
     companion object {
         private const val ARG_FEATURE_ID = "arg_feature_id"
@@ -93,14 +101,47 @@ class FeatureFragment : Fragment() {
                 )
             )
 
-            // Start plugin session in SessionManager
             val pluginId = when (targetPluginDir) {
                 "sample" -> "com.inscopelabs.xtools.sample.fileviewer"
                 "database" -> "com.inscopelabs.xtools.plugin.contextbuilder"
                 "system-info" -> "com.inscopelabs.xtools.plugin.sysinfo"
                 else -> targetPluginDir
             }
+
+            // Register declared & granted capabilities on PermissionManager for sample plugins
+            val permManager = app.permissionManager
+            when (targetPluginDir) {
+                "system-info" -> {
+                    permManager.registerPluginDeclaredPermissions(pluginId, listOf("system", "ui"))
+                    permManager.grantPermission(pluginId, "system")
+                    permManager.grantPermission(pluginId, "ui")
+                }
+                "sample" -> {
+                    permManager.registerPluginDeclaredPermissions(pluginId, listOf("system", "storage", "ui"))
+                    permManager.grantPermission(pluginId, "system")
+                    permManager.grantPermission(pluginId, "storage")
+                    permManager.grantPermission(pluginId, "ui")
+                }
+                "database" -> {
+                    permManager.registerPluginDeclaredPermissions(pluginId, listOf("storage", "context", "ui"))
+                    permManager.grantPermission(pluginId, "storage")
+                    permManager.grantPermission(pluginId, "context")
+                    permManager.grantPermission(pluginId, "ui")
+                }
+            }
+
+            // Start plugin session in shared SessionManager
             currentSession = sessionManager.createSession(pluginId)
+
+            // Construct & attach live JsBridge backed by shared BridgeApiFacade
+            val bridge = JsBridge(
+                handler = null,
+                scope = viewLifecycleOwner.lifecycleScope,
+                facade = app.bridgeApiFacade
+            )
+            bridge.attachWebView(webView, pluginId)
+            webView.addJavascriptInterface(bridge, "XToolsNativeBridge")
+            jsBridge = bridge
 
             val webViewState = savedInstanceState?.getBundle(KEY_WEBVIEW_STATE)
             if (webViewState != null) {
@@ -151,6 +192,9 @@ class FeatureFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        jsBridge?.detachWebView()
+        jsBridge = null
+
         currentSession?.let { session ->
             sessionManager.closeSession(session.id)
             currentSession = null
@@ -160,3 +204,4 @@ class FeatureFragment : Fragment() {
         super.onDestroyView()
     }
 }
+

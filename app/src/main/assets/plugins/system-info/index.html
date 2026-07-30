@@ -38,11 +38,24 @@
 
     <script>
         function loadInfo() {
-            XTools.system.getInfo().then(function(info) {
-                document.getElementById('valOS').innerText = 'Android ' + info.release;
-                document.getElementById('valSDK').innerText = info.sdk;
-                document.getElementById('valModel').innerText = info.manufacturer + ' ' + info.model;
-                document.getElementById('valAppId').innerText = info.appId;
+            var getPromise = (window.XTools && XTools.system && XTools.system.getInfo)
+                ? XTools.system.getInfo()
+                : new Promise(function(resolve, reject) {
+                    if (window.xtools) {
+                        xtools.getDeviceInfo(function(data) {
+                            if (data) resolve(data);
+                            else reject(new Error('No data received'));
+                        });
+                    } else {
+                        reject(new Error('Bridge not initialized'));
+                    }
+                });
+
+            getPromise.then(function(info) {
+                document.getElementById('valOS').innerText = 'Android ' + (info.platformVersion || info.release || 'Unknown');
+                document.getElementById('valSDK').innerText = info.sdk || info.platformVersion || 'Unknown';
+                document.getElementById('valModel').innerText = (info.manufacturer || '') + ' ' + (info.model || 'Device');
+                document.getElementById('valAppId').innerText = (info.appId || info.appVersion || 'Unknown') + ' [' + (info.operatingMode || 'STANDALONE') + ']';
             }).catch(function(e) {
                 console.error(e);
             });

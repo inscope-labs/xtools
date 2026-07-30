@@ -147,7 +147,7 @@
          * @param {function} callback - Callback with device info
          */
         getDeviceInfo: function(callback) {
-            bridge.call('getDeviceInfo', {}, function(response) {
+            bridge.call('system.getDeviceInfo', {}, function(response) {
                 if (callback) {
                     callback(response.success ? response.data : null);
                 }
@@ -313,8 +313,26 @@
         console.log('xtools: Theme changed to', data);
     });
 
+    xtools.system = {
+        getInfo: function() {
+            return new Promise(function(resolve, reject) {
+                bridge.call('system.getDeviceInfo', {}, function(response) {
+                    if (response && response.success) {
+                        resolve(response.data);
+                    } else {
+                        reject(new Error((response && response.error) || 'Failed to get device info'));
+                    }
+                });
+            });
+        },
+        getDeviceInfo: function(callback) {
+            xtools.getDeviceInfo(callback);
+        }
+    };
+
     // Export to global scope
     global.xtools = xtools;
+    global.XTools = xtools;
 
     // Also expose as module if supported
     if (typeof module !== 'undefined' && module.exports) {
