@@ -170,6 +170,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun navigateToPluginDetail(pluginId: String) {
+        val fragment = com.inscopelabs.abx.xtools.ui.plugindetail.PluginDetailFragment.newInstance(pluginId)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.pluginsContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun navigateToSettings() {
+        val fragment = com.inscopelabs.abx.xtools.ui.settings.AppearanceFragment()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.pluginsContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
     companion object {
         private const val TAG_PLUGINS = "TAG_PLUGINS"
         private const val TAG_CONSOLE = "TAG_CONSOLE"
