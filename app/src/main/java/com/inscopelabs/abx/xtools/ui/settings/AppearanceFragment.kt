@@ -29,16 +29,18 @@ class AppearanceFragment : Fragment() {
             darkModeSwitch = findViewById(R.id.switch_dark_mode)
             dynamicColorSwitch = findViewById(R.id.switch_dynamic_color)
 
-            // Stub: load shared preferences.
+            // Load persisted preferences before attaching listeners to avoid triggering listeners on initial state-set
+            val context = requireContext()
+            darkModeSwitch.isChecked = ThemeManager.isDarkModeEnabled(context)
+            dynamicColorSwitch.isChecked = ThemeManager.isDynamicColorEnabled(context)
+
             darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
                 ThemeManager.setThemePreference(requireContext(), isChecked)
             }
 
             dynamicColorSwitch.setOnCheckedChangeListener { _, isChecked ->
-                // Toggle dynamic color.
-                if (isChecked) {
-                    ThemeManager.applyTheme(requireContext())
-                }
+                ThemeManager.setDynamicColorPreference(requireContext(), isChecked)
+                ThemeManager.applyTheme(requireContext())
             }
         }
     }
