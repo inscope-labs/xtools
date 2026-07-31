@@ -1,5 +1,6 @@
 package com.inscopelabs.abx.xtools.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -19,6 +20,7 @@ import com.inscopelabs.abx.xtools.kernel.RuntimeKernel
 import com.inscopelabs.abx.xtools.plugin.manager.PluginManager
 import com.inscopelabs.abx.xtools.plugin.manager.SecurityManager
 import com.inscopelabs.abx.xtools.ui.feature.FeatureFragment
+import com.inscopelabs.abx.xtools.ui.navigation.NavigationRouter
 import kotlinx.coroutines.launch
 
 /**
@@ -32,6 +34,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var runtimeKernel: RuntimeKernel
+    private lateinit var navigationRouter: NavigationRouter
 
     private val toolbarViewModel: ToolbarStateViewModel by viewModels()
 
@@ -73,6 +76,9 @@ class MainActivity : AppCompatActivity() {
                 .commitNow()
         }
 
+        navigationRouter = NavigationRouter(this)
+        navigationRouter.handleDeepLink(intent)
+
         applyTheme()
 
         setupContainerBackStackListeners()
@@ -92,12 +98,18 @@ class MainActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (!popActiveBackStack()) {
+                if (!handleBackPress()) {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
                 }
             }
         })
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        navigationRouter.handleDeepLink(intent)
     }
 
     private fun setupContainerBackStackListeners() {
@@ -165,13 +177,32 @@ class MainActivity : AppCompatActivity() {
                             toolbar.title = state.title
                             toolbar.setNavigationIcon(R.drawable.ic_arrow_back)
                             toolbar.setNavigationOnClickListener {
-                                popActiveBackStack()
+                                handleBackPress()
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun handleBackPress(): Boolean {
+        val activeFragment = if (isPluginsActive) {
+            supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
+        } else {
+            supportFragmentManager.findFragmentByTag(TAG_CONSOLE)
+        }
+        val childFm = activeFragment?.childFragmentManager
+        if (childFm != null && childFm.backStackEntryCount > 0) {
+            val topFragment = childFm.findFragmentById(R.id.childContainer)
+            if (topFragment is FeatureFragment && topFragment.webViewCanGoBack()) {
+                if (navigationRouter.handleBackPressed(true)) {
+                    topFragment.webViewGoBack()
+                    return true
+                }
+            }
+        }
+        return popActiveBackStack()
     }
 
     private fun popActiveBackStack(): Boolean {

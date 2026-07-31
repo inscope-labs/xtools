@@ -58,6 +58,9 @@ class FeatureFragment : Fragment() {
         return featureTitle ?: arguments?.getString(ARG_FEATURE_TITLE) ?: "Feature"
     }
 
+    fun webViewCanGoBack(): Boolean = secureWebView?.canGoBack() ?: false
+    fun webViewGoBack() { secureWebView?.goBack() }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

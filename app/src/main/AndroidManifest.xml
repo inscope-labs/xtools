@@ -48,6 +48,14 @@
                     android:host="xtools.inscopelabs.com"
                     android:pathPrefix="/plugin" />
             </intent-filter>
+
+            <!-- Custom Scheme Deep Links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="xtools" />
+            </intent-filter>
         </activity>
 
         <activity
