@@ -74,7 +74,12 @@ jobs:
         continue-on-error: true
 
       - name: Assemble debug APK
-        run: gradle assembleDebug --stacktrace 2>&1 | tee build.log
+        run: |
+          FULL_VERSION_NAME="${{ steps.version.outputs.version_name }}.${{ steps.version.outputs.debug_code }}"
+          gradle assembleDebug \
+            -PversionCode=${{ steps.version.outputs.version_code }} \
+            -PversionName="$FULL_VERSION_NAME" \
+            --stacktrace 2>&1 | tee build.log
 
       - name: Locate APK
         id: apk
@@ -98,7 +103,7 @@ jobs:
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: xtools-debug-v${{ steps.version.outputs.version_name }}-code${{ steps.version.outputs.version_code }}-d${{ steps.version.outputs.debug_code }}
+          name: xtools-debug-${{ steps.version.outputs.version_name }}.${{ steps.version.outputs.debug_code }}-code${{ steps.version.outputs.version_code }}
           path: ${{ steps.apk.outputs.path }}
           retention-days: 14
           if-no-files-found: error
