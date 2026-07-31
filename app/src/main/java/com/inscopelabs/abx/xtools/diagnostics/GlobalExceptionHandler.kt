@@ -108,6 +108,7 @@ class GlobalExceptionHandler(
         crashActivityLaunched = true
     }
 
+    @Suppress("DEPRECATION")
     private fun buildCrashReport(
         thread: Thread,
         throwable: Throwable,
