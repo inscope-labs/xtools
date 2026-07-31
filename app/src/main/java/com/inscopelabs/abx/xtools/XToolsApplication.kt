@@ -17,6 +17,9 @@ import com.inscopelabs.abx.xtools.kernel.mode.ValidationResult
 import com.inscopelabs.abx.xtools.kernel.permission.PermissionManager
 import com.inscopelabs.abx.xtools.kernel.registry.PluginRegistry
 import com.inscopelabs.abx.xtools.kernel.session.SessionManager
+import com.inscopelabs.abx.xtools.plugin.catalog.CatalogApi
+import com.inscopelabs.abx.xtools.plugin.catalog.CatalogCache
+import com.inscopelabs.abx.xtools.plugin.catalog.RemoteCatalogService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +35,11 @@ class XToolsApplication : Application() {
 
     lateinit var bridgeApiFacade: BridgeApiFacade
         private set
+
+    val catalogCache: CatalogCache by lazy { CatalogCache(this) }
+    val catalogApi: CatalogApi by lazy {
+        RemoteCatalogService(baseUrl = "https://catalog.xtools.inscopelabs.com")
+    }
 
     val sessionManager: SessionManager get() = runtimeKernel.sessionManager
     val permissionManager: PermissionManager get() = runtimeKernel.permissionManager

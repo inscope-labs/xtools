@@ -17,5 +17,6 @@ data class FeatureItem(
 
 data class CategoryContent(
     val categoryName: String,
-    val sections: List<FeatureSection>
+    val sections: List<FeatureSection>,
+    val usesCustomContent: Boolean = false
 ) : Serializable

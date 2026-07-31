@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.ui.catalogdetail.CatalogDetailFragment
 import com.inscopelabs.abx.xtools.ui.category.CategoryContent
 import com.inscopelabs.abx.xtools.ui.category.CategoryFragment
 import com.inscopelabs.abx.xtools.ui.category.FeatureItem
@@ -27,6 +28,9 @@ class PluginsFragment : Fragment() {
         if (childFragment is CategoryFragment) {
             childFragment.onFeatureClickListener = { featureItem ->
                 openFeature(featureItem)
+            }
+            childFragment.onPluginClickListener = { pluginId ->
+                openCatalogDetail(pluginId)
             }
         }
     }
@@ -106,12 +110,20 @@ class PluginsFragment : Fragment() {
                             )
                         )
                     )
+                ),
+                CategoryContent(
+                    categoryName = "Store",
+                    sections = emptyList(),
+                    usesCustomContent = true
                 )
             )
 
             val categoryFragment = CategoryFragment.newInstance(pluginsData)
             categoryFragment.onFeatureClickListener = { featureItem ->
                 openFeature(featureItem)
+            }
+            categoryFragment.onPluginClickListener = { pluginId ->
+                openCatalogDetail(pluginId)
             }
 
             childFragmentManager.beginTransaction()
@@ -124,6 +136,14 @@ class PluginsFragment : Fragment() {
         val featureFragment = FeatureFragment.newInstance(item.id, item.title)
         childFragmentManager.beginTransaction()
             .replace(R.id.childContainer, featureFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun openCatalogDetail(pluginId: String) {
+        val detailFragment = CatalogDetailFragment.newInstance(pluginId)
+        childFragmentManager.beginTransaction()
+            .replace(R.id.childContainer, detailFragment)
             .addToBackStack(null)
             .commit()
     }

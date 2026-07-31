@@ -4,16 +4,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.ui.store.StoreFragment
 
 class CategoryFragment : Fragment() {
 
     private var categoryContents: ArrayList<CategoryContent> = arrayListOf()
     private var adapter: SectionedFeatureAdapter? = null
     var onFeatureClickListener: ((FeatureItem) -> Unit)? = null
+    var onPluginClickListener: ((String) -> Unit)? = null
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var customContentContainer: FrameLayout
 
     companion object {
         private const val ARG_CATEGORIES = "arg_categories"
@@ -34,6 +40,15 @@ class CategoryFragment : Fragment() {
         categoryContents = data ?: arrayListOf()
     }
 
+    override fun onAttachFragment(childFragment: Fragment) {
+        super.onAttachFragment(childFragment)
+        if (childFragment is StoreFragment) {
+            childFragment.onPluginClickListener = { pluginId ->
+                onPluginClickListener?.invoke(pluginId)
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -46,7 +61,8 @@ class CategoryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val tabBar = view.findViewById<CategoryTabBar>(R.id.categoryTabBar)
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView = view.findViewById(R.id.recyclerView)
+        customContentContainer = view.findViewById(R.id.customContentContainer)
 
         adapter = SectionedFeatureAdapter { featureItem ->
             onFeatureClickListener?.invoke(featureItem)
@@ -69,7 +85,29 @@ class CategoryFragment : Fragment() {
     private fun showCategory(index: Int) {
         if (index in categoryContents.indices) {
             val content = categoryContents[index]
-            adapter?.setSections(content.sections)
+            if (content.usesCustomContent) {
+                recyclerView.visibility = View.GONE
+                customContentContainer.visibility = View.VISIBLE
+
+                val existing = childFragmentManager.findFragmentById(R.id.customContentContainer)
+                if (existing == null) {
+                    val storeFragment = StoreFragment()
+                    storeFragment.onPluginClickListener = { pluginId ->
+                        onPluginClickListener?.invoke(pluginId)
+                    }
+                    childFragmentManager.beginTransaction()
+                        .add(R.id.customContentContainer, storeFragment)
+                        .commit()
+                } else if (existing is StoreFragment) {
+                    existing.onPluginClickListener = { pluginId ->
+                        onPluginClickListener?.invoke(pluginId)
+                    }
+                }
+            } else {
+                customContentContainer.visibility = View.GONE
+                recyclerView.visibility = View.VISIBLE
+                adapter?.setSections(content.sections)
+            }
         }
     }
 }

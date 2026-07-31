@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.XToolsApplication
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogApi
 import com.inscopelabs.abx.xtools.plugin.lifecycle.InstallationPipeline
 import kotlinx.coroutines.launch
@@ -45,10 +46,22 @@ class CatalogDetailFragment : Fragment() {
             pluginVersion = findViewById(R.id.tv_catalog_plugin_version)
             installButton = findViewById(R.id.btn_install)
 
-            // Stub: load from CatalogApi.
+            // Load details from CatalogApi
             pluginName.text = pluginId
             pluginDescription.text = "Loading details..."
-            pluginVersion.text = "v1.0.0"
+            pluginVersion.text = ""
+
+            lifecycleScope.launch {
+                val plugin = XToolsApplication.instance.catalogApi.getPluginDetails(pluginId)
+                if (plugin != null) {
+                    pluginName.text = plugin.name
+                    pluginDescription.text = plugin.description ?: "No description"
+                    pluginVersion.text = "v${plugin.version}"
+                } else {
+                    pluginDescription.text = "Plugin not found"
+                    installButton.isEnabled = false
+                }
+            }
 
             installButton.setOnClickListener {
                 // In Phase 4, trigger InstallationPipeline.install(catalogPlugin).
