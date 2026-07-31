@@ -6,12 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.kernel.registry.PluginState
 import com.inscopelabs.abx.xtools.ui.catalogdetail.CatalogDetailFragment
 import com.inscopelabs.abx.xtools.ui.category.CategoryContent
 import com.inscopelabs.abx.xtools.ui.category.CategoryFragment
 import com.inscopelabs.abx.xtools.ui.category.FeatureItem
 import com.inscopelabs.abx.xtools.ui.category.FeatureSection
 import com.inscopelabs.abx.xtools.ui.feature.FeatureFragment
+import com.inscopelabs.abx.xtools.ui.plugindetail.PluginDetailFragment
 
 class PluginsFragment : Fragment() {
 
@@ -29,6 +32,9 @@ class PluginsFragment : Fragment() {
             childFragment.onFeatureClickListener = { featureItem ->
                 openFeature(featureItem)
             }
+            childFragment.onFeatureLongClickListener = { item ->
+                item.registryId?.let { openPluginDetail(it) }
+            }
             childFragment.onPluginClickListener = { pluginId ->
                 openCatalogDetail(pluginId)
             }
@@ -38,35 +44,24 @@ class PluginsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (savedInstanceState == null) {
+            val installedPluginItems = XToolsApplication.instance.pluginRegistry.getAllPlugins().map { entry ->
+                FeatureItem(
+                    id = entry.installationPath,
+                    registryId = entry.id,
+                    title = entry.manifest.name,
+                    statusText = "${if (entry.state == PluginState.ACTIVE) "Running" else "Inactive"} • v${entry.version}",
+                    statusIsPositive = entry.state == PluginState.ACTIVE,
+                    iconRes = R.drawable.ic_plugins
+                )
+            }
+
             val pluginsData = arrayListOf(
                 CategoryContent(
                     categoryName = "Active",
                     sections = listOf(
                         FeatureSection(
                             title = "Installed Plugins",
-                            items = listOf(
-                                FeatureItem(
-                                    id = "database",
-                                    title = "SQLite Database CRUD",
-                                    statusText = "Running • v1.0.0",
-                                    statusIsPositive = true,
-                                    iconRes = R.drawable.ic_plugins
-                                ),
-                                FeatureItem(
-                                    id = "system-info",
-                                    title = "System Information",
-                                    statusText = "Running • v1.0.0",
-                                    statusIsPositive = true,
-                                    iconRes = R.drawable.ic_plugins
-                                ),
-                                FeatureItem(
-                                    id = "sample",
-                                    title = "Sample Plugin",
-                                    statusText = "Ready • v1.0.0",
-                                    statusIsPositive = true,
-                                    iconRes = R.drawable.ic_plugins
-                                )
-                            )
+                            items = installedPluginItems
                         )
                     )
                 ),
@@ -122,6 +117,9 @@ class PluginsFragment : Fragment() {
             categoryFragment.onFeatureClickListener = { featureItem ->
                 openFeature(featureItem)
             }
+            categoryFragment.onFeatureLongClickListener = { item ->
+                item.registryId?.let { openPluginDetail(it) }
+            }
             categoryFragment.onPluginClickListener = { pluginId ->
                 openCatalogDetail(pluginId)
             }
@@ -142,6 +140,14 @@ class PluginsFragment : Fragment() {
 
     private fun openCatalogDetail(pluginId: String) {
         val detailFragment = CatalogDetailFragment.newInstance(pluginId)
+        childFragmentManager.beginTransaction()
+            .replace(R.id.childContainer, detailFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun openPluginDetail(pluginId: String) {
+        val detailFragment = PluginDetailFragment.newInstance(pluginId)
         childFragmentManager.beginTransaction()
             .replace(R.id.childContainer, detailFragment)
             .addToBackStack(null)

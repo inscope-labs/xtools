@@ -20,6 +20,13 @@ import com.inscopelabs.abx.xtools.kernel.session.SessionManager
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogApi
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogCache
 import com.inscopelabs.abx.xtools.plugin.catalog.RemoteCatalogService
+import com.inscopelabs.abx.xtools.bridge.manifest.ManifestParser
+import com.inscopelabs.abx.xtools.bridge.manifest.PluginManifest
+import com.inscopelabs.abx.xtools.kernel.registry.PluginState
+import com.inscopelabs.abx.xtools.plugin.lifecycle.ActivationManager
+import com.inscopelabs.abx.xtools.plugin.lifecycle.UninstallManager
+import com.inscopelabs.abx.xtools.plugin.storage.PluginDirectoryManager
+import com.inscopelabs.abx.xtools.plugin.storage.PluginMetadataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,8 +50,18 @@ class XToolsApplication : Application() {
 
     val sessionManager: SessionManager get() = runtimeKernel.sessionManager
     val permissionManager: PermissionManager get() = runtimeKernel.permissionManager
+    val pluginRegistry: PluginRegistry get() = runtimeKernel.pluginRegistry
     val bridgeDispatcher: BridgeDispatcher get() = runtimeKernel.bridgeDispatcher
     val modeArbiter: ModeArbiter get() = runtimeKernel.modeArbiter
+
+    val pluginMetadataStore: PluginMetadataStore by lazy { PluginMetadataStore(this) }
+    val pluginDirectoryManager: PluginDirectoryManager by lazy { PluginDirectoryManager(this) }
+    val activationManager: ActivationManager by lazy {
+        ActivationManager(pluginRegistry, permissionManager, modeArbiter)
+    }
+    val uninstallManager: UninstallManager by lazy {
+        UninstallManager(pluginRegistry, pluginMetadataStore, pluginDirectoryManager, permissionManager)
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -95,6 +112,31 @@ class XToolsApplication : Application() {
             modeArbiter = modeArbiter,
             bridgeDispatcher = bridgeDispatcher
         )
+
+        registerBundledSamplePlugins(pluginRegistry, permissionManager)
+    }
+
+    private fun registerBundledSamplePlugins(
+        pluginRegistry: PluginRegistry,
+        permissionManager: PermissionManager
+    ) {
+        val bundledPlugins = listOf("database", "sample", "system-info")
+        val manifestParser = ManifestParser()
+
+        for (dirName in bundledPlugins) {
+            try {
+                val json = assets.open("plugins/$dirName/plugin.json").bufferedReader().use { it.readText() }
+                val manifest = manifestParser.parse(json)
+                pluginRegistry.register(manifest, installationPath = dirName, category = "sample")
+                pluginRegistry.updateState(manifest.id, PluginState.ACTIVE)
+                permissionManager.registerPluginDeclaredPermissions(manifest.id, manifest.permissions)
+                for (permission in manifest.permissions) {
+                    permissionManager.grantPermission(manifest.id, permission)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun ensureWebViewCacheDirs() {

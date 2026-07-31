@@ -12,7 +12,8 @@ data class FeatureItem(
     val title: String,
     val statusText: String,
     val statusIsPositive: Boolean,
-    val iconRes: Int
+    val iconRes: Int,
+    val registryId: String? = null
 ) : Serializable
 
 data class CategoryContent(

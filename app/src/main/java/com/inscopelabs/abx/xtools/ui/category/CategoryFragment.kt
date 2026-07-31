@@ -16,6 +16,7 @@ class CategoryFragment : Fragment() {
     private var categoryContents: ArrayList<CategoryContent> = arrayListOf()
     private var adapter: SectionedFeatureAdapter? = null
     var onFeatureClickListener: ((FeatureItem) -> Unit)? = null
+    var onFeatureLongClickListener: ((FeatureItem) -> Unit)? = null
     var onPluginClickListener: ((String) -> Unit)? = null
 
     private lateinit var recyclerView: RecyclerView
@@ -64,9 +65,10 @@ class CategoryFragment : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerView)
         customContentContainer = view.findViewById(R.id.customContentContainer)
 
-        adapter = SectionedFeatureAdapter { featureItem ->
-            onFeatureClickListener?.invoke(featureItem)
-        }
+        adapter = SectionedFeatureAdapter(
+            onFeatureClick = { featureItem -> onFeatureClickListener?.invoke(featureItem) },
+            onFeatureLongClick = { featureItem -> onFeatureLongClickListener?.invoke(featureItem) }
+        )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter

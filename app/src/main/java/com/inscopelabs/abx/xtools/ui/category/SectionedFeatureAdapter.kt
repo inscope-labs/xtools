@@ -11,7 +11,8 @@ import com.google.android.material.button.MaterialButton
 import com.inscopelabs.abx.xtools.R
 
 class SectionedFeatureAdapter(
-    private val onFeatureClick: (FeatureItem) -> Unit = {}
+    private val onFeatureClick: (FeatureItem) -> Unit = {},
+    private val onFeatureLongClick: (FeatureItem) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     sealed class AdapterItem {
@@ -53,7 +54,7 @@ class SectionedFeatureAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
             is AdapterItem.Header -> (holder as HeaderViewHolder).bind(item)
-            is AdapterItem.Row -> (holder as RowViewHolder).bind(item, onFeatureClick)
+            is AdapterItem.Row -> (holder as RowViewHolder).bind(item, onFeatureClick, onFeatureLongClick)
         }
     }
 
@@ -73,7 +74,11 @@ class SectionedFeatureAdapter(
         private val statusView: TextView = itemView.findViewById(R.id.featureStatus)
         private val btnOpen: MaterialButton = itemView.findViewById(R.id.btnOpen)
 
-        fun bind(row: AdapterItem.Row, onFeatureClick: (FeatureItem) -> Unit) {
+        fun bind(
+            row: AdapterItem.Row,
+            onFeatureClick: (FeatureItem) -> Unit,
+            onFeatureLongClick: (FeatureItem) -> Unit
+        ) {
             val item = row.item
             iconView.setImageResource(item.iconRes)
             titleView.text = item.title
@@ -91,6 +96,10 @@ class SectionedFeatureAdapter(
             }
             itemView.setOnClickListener {
                 onFeatureClick(item)
+            }
+            itemView.setOnLongClickListener {
+                onFeatureLongClick(item)
+                true
             }
         }
     }

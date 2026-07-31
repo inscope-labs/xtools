@@ -28,6 +28,7 @@ class ActivationManager(
         // 2. Allocate resources (WebView, memory quotas).
         // 3. If in GOVERNED mode, register services in McpRegistry.
         // 4. Update state to ACTIVE.
+        pluginRegistry.updateState(pluginId, PluginState.ACTIVE)
         return true
     }
 
@@ -36,6 +37,7 @@ class ActivationManager(
         if (entry.state != PluginState.ACTIVE) return true
 
         // Stub: release resources, unregister MCP services, persist state.
+        pluginRegistry.updateState(pluginId, PluginState.INACTIVE)
         return true
     }
 }
