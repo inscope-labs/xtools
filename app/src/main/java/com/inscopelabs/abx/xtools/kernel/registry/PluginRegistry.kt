@@ -1,6 +1,7 @@
 package com.inscopelabs.abx.xtools.kernel.registry
 
 import com.inscopelabs.abx.xtools.bridge.manifest.PluginManifest
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ class PluginRegistry {
     val plugins: StateFlow<Map<String, PluginEntry>> = _plugins.asStateFlow()
 
     fun register(manifest: PluginManifest, installationPath: String, category: String = "general") {
+        Logger.i("PluginRegistry", "register: pluginId='${manifest.id}', v${manifest.version}, category=$category")
         val entry = PluginEntry(
             id = manifest.id,
             manifest = manifest,
@@ -30,10 +32,12 @@ class PluginRegistry {
 
     fun updateState(pluginId: String, newState: PluginState) {
         val current = _plugins.value[pluginId] ?: return
+        Logger.i("PluginRegistry", "updateState: pluginId='$pluginId', ${current.state} -> $newState")
         _plugins.value = _plugins.value + (pluginId to current.copy(state = newState))
     }
 
     fun unregister(pluginId: String) {
+        Logger.i("PluginRegistry", "unregister: pluginId='$pluginId'")
         _plugins.value = _plugins.value - pluginId
     }
 

@@ -15,6 +15,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -161,6 +162,8 @@ class StoreFragment : Fragment() {
             currentPage++
         }
 
+        Logger.d("StoreFragment", "performSearch: query='$currentQuery', category='$currentCategory', page=$currentPage, reset=$reset")
+
         lifecycleScope.launch {
             try {
                 val result = XToolsApplication.instance.catalogApi.search(
@@ -171,6 +174,7 @@ class StoreFragment : Fragment() {
                 )
 
                 totalCount = result.totalCount
+                Logger.d("StoreFragment", "performSearch success: found ${result.plugins.size} items (total=$totalCount)")
 
                 if (reset) {
                     adapter.submitList(result.plugins)
@@ -179,7 +183,7 @@ class StoreFragment : Fragment() {
                     adapter.appendList(result.plugins)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Logger.e("StoreFragment", "performSearch error", e)
             } finally {
                 isLoading = false
             }

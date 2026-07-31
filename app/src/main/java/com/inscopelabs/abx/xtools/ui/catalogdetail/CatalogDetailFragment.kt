@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogApi
 import com.inscopelabs.abx.xtools.plugin.lifecycle.InstallationPipeline
 import kotlinx.coroutines.launch
@@ -52,20 +53,22 @@ class CatalogDetailFragment : Fragment() {
             pluginVersion.text = ""
 
             lifecycleScope.launch {
+                Logger.i("CatalogDetailFragment", "Fetching details for catalog pluginId '$pluginId'")
                 val plugin = XToolsApplication.instance.catalogApi.getPluginDetails(pluginId)
                 if (plugin != null) {
+                    Logger.i("CatalogDetailFragment", "Fetched catalog plugin details for '${plugin.name}'")
                     pluginName.text = plugin.name
                     pluginDescription.text = plugin.description ?: "No description"
                     pluginVersion.text = "v${plugin.version}"
                 } else {
+                    Logger.w("CatalogDetailFragment", "Plugin not found in catalog for pluginId '$pluginId'")
                     pluginDescription.text = "Plugin not found"
                     installButton.isEnabled = false
                 }
             }
 
             installButton.setOnClickListener {
-                // In Phase 4, trigger InstallationPipeline.install(catalogPlugin).
-                // For now, show a toast.
+                Logger.i("CatalogDetailFragment", "Install button clicked for catalog pluginId '$pluginId'")
                 lifecycleScope.launch {
                     // install()
                 }

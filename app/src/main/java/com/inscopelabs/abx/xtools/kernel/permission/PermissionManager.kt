@@ -1,5 +1,6 @@
 package com.inscopelabs.abx.xtools.kernel.permission
 
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.mode.ModeArbiter
 import com.inscopelabs.abx.xtools.kernel.mode.NotYetWired
 import com.inscopelabs.abx.xtools.kernel.mode.OperatingMode
@@ -59,22 +60,26 @@ class PermissionManager(
         overrideMode: OperatingMode? = null
     ): Boolean {
         val currentMode = overrideMode ?: modeArbiter?.currentMode?.value ?: OperatingMode.STANDALONE
-        return when (currentMode) {
+        val authorized = when (currentMode) {
             OperatingMode.STANDALONE -> {
                 val declared = _declaredPermissions.value[pluginId]
                 if (declared != null && !declared.contains(capability)) {
-                    return false
+                    false
+                } else {
+                    _grantedPermissions.value[pluginId]?.contains(capability) ?: false
                 }
-                _grantedPermissions.value[pluginId]?.contains(capability) ?: false
             }
             OperatingMode.GOVERNED -> {
                 // Defer to abx-server via AIDL contract without consulting local grants
                 aidlPermissionClient.authorizeInGovernedMode(pluginId, capability)
             }
         }
+        Logger.d("PermissionManager", "isAuthorized: pluginId=$pluginId, capability=$capability, mode=$currentMode -> authorized=$authorized")
+        return authorized
     }
 
     fun grantPermission(pluginId: String, capability: String) {
+        Logger.i("PermissionManager", "grantPermission: pluginId=$pluginId, capability=$capability")
         val current = _grantedPermissions.value.toMutableMap()
         val perms = current.getOrDefault(pluginId, emptySet()).toMutableSet()
         perms.add(capability)
@@ -83,12 +88,14 @@ class PermissionManager(
     }
 
     fun revokePermission(pluginId: String, capability: String) {
+        Logger.i("PermissionManager", "revokePermission: pluginId=$pluginId, capability=$capability")
         val current = _grantedPermissions.value.toMutableMap()
         current[pluginId] = current[pluginId]?.minus(capability) ?: emptySet()
         _grantedPermissions.value = current
     }
 
     fun clearPermissions(pluginId: String) {
+        Logger.i("PermissionManager", "clearPermissions: pluginId=$pluginId")
         val current = _grantedPermissions.value.toMutableMap()
         current.remove(pluginId)
         _grantedPermissions.value = current

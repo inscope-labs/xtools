@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Switch
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.ui.ThemeManager
 
 /**
@@ -35,10 +36,12 @@ class AppearanceFragment : Fragment() {
             dynamicColorSwitch.isChecked = ThemeManager.isDynamicColorEnabled(context)
 
             darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+                Logger.i("AppearanceFragment", "Dark mode toggled: isChecked=$isChecked")
                 ThemeManager.setThemePreference(requireContext(), isChecked)
             }
 
             dynamicColorSwitch.setOnCheckedChangeListener { _, isChecked ->
+                Logger.i("AppearanceFragment", "Dynamic color toggled: isChecked=$isChecked")
                 ThemeManager.setDynamicColorPreference(requireContext(), isChecked)
                 ThemeManager.applyTheme(requireContext())
             }

@@ -16,6 +16,7 @@ import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
 import com.inscopelabs.abx.xtools.bridge.BridgeHandler
 import com.inscopelabs.abx.xtools.bridge.JsBridge
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.RuntimeKernel
 import com.inscopelabs.abx.xtools.plugin.manager.PluginManager
 import com.inscopelabs.abx.xtools.plugin.manager.SecurityManager
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Logger.i("MainActivity", "onCreate: initializing MainActivity")
 
         // In a real implementation, this would be injected via DI or application context.
         runtimeKernel = (application as XToolsApplication).runtimeKernel
@@ -88,6 +90,7 @@ class MainActivity : AppCompatActivity() {
 
         pillModeSwitch.setOnToggleListener { active ->
             isPluginsActive = active
+            Logger.d("MainActivity", "Mode toggled: isPluginsActive=$isPluginsActive")
             pluginsContainer.isVisible = isPluginsActive
             consoleContainer.isVisible = !isPluginsActive
             updateSwitchState(isPluginsActive)
@@ -226,6 +229,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun navigateToPluginDetail(pluginId: String) {
+        Logger.i("MainActivity", "navigateToPluginDetail: pluginId=$pluginId")
         val pluginsFrag = supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
         val fragment = com.inscopelabs.abx.xtools.ui.plugindetail.PluginDetailFragment.newInstance(pluginId)
         pluginsFrag?.childFragmentManager?.beginTransaction()
@@ -235,6 +239,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun navigateToSettings() {
+        Logger.i("MainActivity", "navigateToSettings")
         val pluginsFrag = supportFragmentManager.findFragmentByTag(TAG_PLUGINS)
         val fragment = com.inscopelabs.abx.xtools.ui.settings.AppearanceFragment()
         pluginsFrag?.childFragmentManager?.beginTransaction()

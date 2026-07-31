@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.ui.category.CategoryContent
 import com.inscopelabs.abx.xtools.ui.category.CategoryFragment
 import com.inscopelabs.abx.xtools.ui.category.FeatureItem
@@ -97,6 +98,7 @@ class ConsoleFragment : Fragment() {
     }
 
     private fun openFeature(item: FeatureItem) {
+        Logger.i("ConsoleFragment", "openFeature: id=${item.id}, title=${item.title}")
         val featureFragment = FeatureFragment.newInstance(item.id, item.title)
         childFragmentManager.beginTransaction()
             .replace(R.id.childContainer, featureFragment)

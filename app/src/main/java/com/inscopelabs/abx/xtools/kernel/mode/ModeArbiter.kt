@@ -1,5 +1,6 @@
 package com.inscopelabs.abx.xtools.kernel.mode
 
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,6 +48,7 @@ class ModeArbiter(
      */
     suspend fun validateAndSwitch(sessionToken: SessionToken): Boolean = mutex.withLock {
         try {
+            Logger.i("ModeArbiter", "validateAndSwitch: evaluating sessionToken=${sessionToken.raw.take(6)}...")
             val validationResult = sessionValidator.validate(sessionToken)
             if (validationResult.isValid) {
                 transitionEnforcer.enforceTransition(
@@ -54,9 +56,10 @@ class ModeArbiter(
                     sessionToken = sessionToken
                 )
                 _currentMode.value = OperatingMode.GOVERNED
+                Logger.i("ModeArbiter", "Switched to GOVERNED mode")
                 true
             } else {
-                // Fail-closed: revert to STANDALONE mode
+                Logger.w("ModeArbiter", "Validation failed (${validationResult.reason}); reverting to STANDALONE mode")
                 transitionEnforcer.enforceTransition(
                     newMode = OperatingMode.STANDALONE,
                     sessionToken = null
@@ -65,7 +68,7 @@ class ModeArbiter(
                 false
             }
         } catch (e: Exception) {
-            // Fail-closed on any transition exception
+            Logger.e("ModeArbiter", "Exception during mode transition; forcing STANDALONE mode", e)
             try {
                 transitionEnforcer.enforceTransition(
                     newMode = OperatingMode.STANDALONE,

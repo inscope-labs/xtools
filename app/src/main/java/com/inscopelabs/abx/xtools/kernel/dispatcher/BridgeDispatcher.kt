@@ -3,6 +3,7 @@ package com.inscopelabs.abx.xtools.kernel.dispatcher
 import com.inscopelabs.abx.xtools.bridge.BridgeRequest
 import com.inscopelabs.abx.xtools.bridge.BridgeResponse
 import com.inscopelabs.abx.xtools.bridge.protocol.BridgeError
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.mode.NotYetWired
 import com.inscopelabs.abx.xtools.kernel.permission.PermissionManager
 import java.util.concurrent.ConcurrentHashMap
@@ -86,8 +87,10 @@ class BridgeDispatcher(
     }
 
     suspend fun dispatch(pluginId: String, request: BridgeRequest): BridgeResponse {
+        Logger.d("BridgeDispatcher", "dispatch: pluginId=$pluginId, action=${request.action}, reqId=${request.id}")
         // 1. Rate limiting check
         if (!rateLimiter.isAllowed(pluginId, request.action)) {
+            Logger.w("BridgeDispatcher", "Rate limit exceeded for plugin '$pluginId', action '${request.action}'")
             return BridgeResponse.error(
                 id = request.id,
                 error = "Rate limit exceeded for action: ${request.action}"
@@ -96,16 +99,20 @@ class BridgeDispatcher(
 
         // 2. Handler lookup
         val handler = handlers[request.action]
-            ?: return BridgeResponse.error(
+        if (handler == null) {
+            Logger.w("BridgeDispatcher", "Unsupported action '${request.action}' from plugin '$pluginId'")
+            return BridgeResponse.error(
                 id = request.id,
                 error = "Unsupported bridge action: ${request.action}"
             )
+        }
 
         // 3. Permission authorization check (mode-agnostic delegation to PermissionManager)
         val requiredCap = handler.requiredCapability ?: getRequiredCapabilityForAction(request.action)
         if (requiredCap != null) {
             val isAuthorized = permissionManager.isAuthorized(pluginId, requiredCap)
             if (!isAuthorized) {
+                Logger.w("BridgeDispatcher", "Permission denied for capability '$requiredCap' on plugin '$pluginId'")
                 return BridgeResponse.error(
                     id = request.id,
                     error = "Permission denied for capability '$requiredCap' on plugin '$pluginId'"
@@ -116,6 +123,7 @@ class BridgeDispatcher(
         // 4. Schema validation check
         val schemaResult = schemaValidator.validatePayload(request.action, request.payload.toString())
         if (!schemaResult.isValid) {
+            Logger.w("BridgeDispatcher", "Invalid payload schema for action '${request.action}': ${schemaResult.errorMessage}")
             return BridgeResponse.error(
                 id = request.id,
                 error = "Invalid payload schema: ${schemaResult.errorMessage}"
@@ -124,10 +132,14 @@ class BridgeDispatcher(
 
         // 5. Execution
         return try {
-            handler.handle(pluginId, request)
+            val response = handler.handle(pluginId, request)
+            Logger.d("BridgeDispatcher", "Executed '${request.action}' for '$pluginId' -> success")
+            response
         } catch (e: BridgeError) {
+            Logger.e("BridgeDispatcher", "BridgeError executing '${request.action}' for '$pluginId'", e)
             BridgeResponse.error(request.id, "Error ${e.code}: ${e.message}")
         } catch (e: Exception) {
+            Logger.e("BridgeDispatcher", "Exception executing '${request.action}' for '$pluginId'", e)
             BridgeResponse.error(request.id, "Internal error: ${e.message ?: "Unknown error"}")
         }
     }

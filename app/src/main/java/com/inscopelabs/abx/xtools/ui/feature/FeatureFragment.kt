@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.bridge.JsBridge
 import com.inscopelabs.abx.xtools.kernel.session.PluginSession
 import com.inscopelabs.abx.xtools.kernel.session.SessionManager
@@ -152,8 +153,10 @@ class FeatureFragment : Fragment() {
             } else {
                 lifecycleScope.launch {
                     val loader = UnifiedPluginLoader(requireContext(), isDevelopmentMode = true)
+                    Logger.i("FeatureFragment", "Loading plugin '$targetPluginDir' for pluginId '$pluginId'")
                     when (val result = loader.loadPlugin(targetPluginDir)) {
                         is PluginLoadResult.Success -> {
+                            Logger.i("FeatureFragment", "Successfully loaded plugin '$targetPluginDir'")
                             webView.loadDataWithBaseURL(
                                 result.baseUrl,
                                 result.contentHtml,
@@ -163,6 +166,7 @@ class FeatureFragment : Fragment() {
                             )
                         }
                         is PluginLoadResult.Error -> {
+                            Logger.e("FeatureFragment", "Failed to load plugin '$targetPluginDir': ${result.reason}")
                             placeholderContainer.visibility = View.VISIBLE
                             webViewContainer.visibility = View.GONE
                             idText.text = "Failed to load plugin: ${result.reason}"

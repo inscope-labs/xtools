@@ -1,5 +1,6 @@
 package com.inscopelabs.abx.xtools.plugin.lifecycle
 
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.mode.ModeArbiter
 import com.inscopelabs.abx.xtools.kernel.permission.PermissionManager
 import com.inscopelabs.abx.xtools.kernel.registry.PluginEntry
@@ -20,24 +21,36 @@ class ActivationManager(
 ) {
 
     suspend fun activate(pluginId: String): Boolean {
-        val entry = pluginRegistry.getById(pluginId) ?: return false
-        if (entry.state == PluginState.ACTIVE) return true
+        Logger.i("ActivationManager", "activate requested for pluginId '$pluginId'")
+        val entry = pluginRegistry.getById(pluginId)
+        if (entry == null) {
+            Logger.w("ActivationManager", "Cannot activate: plugin '$pluginId' not found in registry")
+            return false
+        }
+        if (entry.state == PluginState.ACTIVE) {
+            Logger.d("ActivationManager", "Plugin '$pluginId' is already ACTIVE")
+            return true
+        }
 
-        // Stub: In production, this would:
-        // 1. Validate permissions are granted (or prompt user).
-        // 2. Allocate resources (WebView, memory quotas).
-        // 3. If in GOVERNED mode, register services in McpRegistry.
-        // 4. Update state to ACTIVE.
         pluginRegistry.updateState(pluginId, PluginState.ACTIVE)
+        Logger.i("ActivationManager", "Plugin '$pluginId' activated successfully")
         return true
     }
 
     suspend fun deactivate(pluginId: String): Boolean {
-        val entry = pluginRegistry.getById(pluginId) ?: return false
-        if (entry.state != PluginState.ACTIVE) return true
+        Logger.i("ActivationManager", "deactivate requested for pluginId '$pluginId'")
+        val entry = pluginRegistry.getById(pluginId)
+        if (entry == null) {
+            Logger.w("ActivationManager", "Cannot deactivate: plugin '$pluginId' not found in registry")
+            return false
+        }
+        if (entry.state != PluginState.ACTIVE) {
+            Logger.d("ActivationManager", "Plugin '$pluginId' is not ACTIVE (state=${entry.state})")
+            return true
+        }
 
-        // Stub: release resources, unregister MCP services, persist state.
         pluginRegistry.updateState(pluginId, PluginState.INACTIVE)
+        Logger.i("ActivationManager", "Plugin '$pluginId' deactivated successfully")
         return true
     }
 }

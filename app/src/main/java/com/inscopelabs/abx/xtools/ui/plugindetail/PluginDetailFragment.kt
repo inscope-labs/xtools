@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.registry.PluginEntry
 import com.inscopelabs.abx.xtools.kernel.registry.PluginState
 import kotlinx.coroutines.launch
@@ -64,9 +65,11 @@ class PluginDetailFragment : Fragment() {
 
     private fun loadPluginDetails() {
         val app = XToolsApplication.instance
+        Logger.i("PluginDetailFragment", "loadPluginDetails for pluginId '$pluginId'")
         val entry = app.pluginRegistry.getById(pluginId)
 
         if (entry == null) {
+            Logger.w("PluginDetailFragment", "Plugin not found in registry for pluginId '$pluginId'")
             pluginName.text = pluginId
             pluginVersion.text = ""
             pluginDescription.text = "Plugin not found"

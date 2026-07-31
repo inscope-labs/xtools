@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.registry.PluginState
 import com.inscopelabs.abx.xtools.ui.catalogdetail.CatalogDetailFragment
 import com.inscopelabs.abx.xtools.ui.category.CategoryContent
@@ -131,6 +132,7 @@ class PluginsFragment : Fragment() {
     }
 
     private fun openFeature(item: FeatureItem) {
+        Logger.i("PluginsFragment", "openFeature: id=${item.id}, title=${item.title}")
         val featureFragment = FeatureFragment.newInstance(item.id, item.title)
         childFragmentManager.beginTransaction()
             .replace(R.id.childContainer, featureFragment)
@@ -139,6 +141,7 @@ class PluginsFragment : Fragment() {
     }
 
     private fun openCatalogDetail(pluginId: String) {
+        Logger.i("PluginsFragment", "openCatalogDetail: pluginId=$pluginId")
         val detailFragment = CatalogDetailFragment.newInstance(pluginId)
         childFragmentManager.beginTransaction()
             .replace(R.id.childContainer, detailFragment)
@@ -147,6 +150,7 @@ class PluginsFragment : Fragment() {
     }
 
     private fun openPluginDetail(pluginId: String) {
+        Logger.i("PluginsFragment", "openPluginDetail: registryId=$pluginId")
         val detailFragment = PluginDetailFragment.newInstance(pluginId)
         childFragmentManager.beginTransaction()
             .replace(R.id.childContainer, detailFragment)

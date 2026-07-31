@@ -1,5 +1,6 @@
 package com.inscopelabs.abx.xtools.plugin.lifecycle
 
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.permission.PermissionManager
 import com.inscopelabs.abx.xtools.kernel.registry.PluginRegistry
 import com.inscopelabs.abx.xtools.plugin.storage.PluginDirectoryManager
@@ -19,13 +20,19 @@ class UninstallManager(
 ) {
 
     suspend fun uninstall(pluginId: String, keepData: Boolean = false): Boolean {
-        val entry = pluginRegistry.getById(pluginId) ?: return false
+        Logger.i("UninstallManager", "uninstall requested for plugin '$pluginId' (keepData=$keepData)")
+        val entry = pluginRegistry.getById(pluginId)
+        if (entry == null) {
+            Logger.w("UninstallManager", "Cannot uninstall: plugin '$pluginId' not found in registry")
+            return false
+        }
         permissionManager.clearPermissions(pluginId)
         if (!keepData) {
             directoryManager.getPluginDirectory(pluginId).deleteRecursively()
         }
         metadataStore.removePluginMetadata(pluginId)
         pluginRegistry.unregister(pluginId)
+        Logger.i("UninstallManager", "Plugin '$pluginId' uninstalled successfully")
         return true
     }
 }

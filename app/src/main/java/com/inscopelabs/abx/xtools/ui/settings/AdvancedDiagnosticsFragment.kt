@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.inscopelabs.abx.xtools.R
+import com.inscopelabs.abx.xtools.diagnostics.Logger
 
 /**
  * Advanced diagnostics: view crash logs, ANR watchdog status,
@@ -27,6 +28,7 @@ class AdvancedDiagnosticsFragment : Fragment() {
             diagnosticsTextView = findViewById(R.id.tv_diagnostics)
 
             // Stub: load real data from CrashReporterManager and AnrWatchdog.
+            Logger.i("AdvancedDiagnosticsFragment", "Displaying advanced diagnostics status")
             diagnosticsTextView.text = "ANR Watchdog: ACTIVE\n" +
                     "Last Crash: None\n" +
                     "Audit Log Entries: 0\n" +
