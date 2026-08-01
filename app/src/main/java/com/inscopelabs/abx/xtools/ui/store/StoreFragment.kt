@@ -16,6 +16,7 @@ import com.google.android.material.chip.ChipGroup
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
 import com.inscopelabs.abx.xtools.diagnostics.Logger
+import com.inscopelabs.abx.xtools.ui.InputCoordinator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,6 +53,7 @@ class StoreFragment : Fragment() {
         rvCatalogPlugins = view.findViewById(R.id.rvCatalogPlugins)
 
         adapter = CatalogPluginAdapter { plugin ->
+            InputCoordinator.hideKeyboard(requireActivity())
             onPluginClickListener?.invoke(plugin.id)
         }
 

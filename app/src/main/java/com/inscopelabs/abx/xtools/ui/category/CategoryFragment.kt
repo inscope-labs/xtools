@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.diagnostics.Logger
+import com.inscopelabs.abx.xtools.ui.InputCoordinator
 import com.inscopelabs.abx.xtools.ui.store.StoreFragment
 
 class CategoryFragment : Fragment() {
@@ -86,6 +87,7 @@ class CategoryFragment : Fragment() {
     }
 
     private fun showCategory(index: Int) {
+        InputCoordinator.hideKeyboard(requireActivity())
         if (index in categoryContents.indices) {
             val content = categoryContents[index]
             Logger.d("CategoryFragment", "Selected category index=$index, name='${content.categoryName}'")

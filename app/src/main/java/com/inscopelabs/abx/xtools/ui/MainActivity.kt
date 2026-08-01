@@ -2,6 +2,7 @@ package com.inscopelabs.abx.xtools.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
@@ -89,6 +90,7 @@ class MainActivity : AppCompatActivity() {
         updateToolbarForCurrentContainer()
 
         pillModeSwitch.setOnToggleListener { active ->
+            InputCoordinator.hideKeyboard(this)
             isPluginsActive = active
             Logger.d("MainActivity", "Mode toggled: isPluginsActive=$isPluginsActive")
             pluginsContainer.isVisible = isPluginsActive
@@ -113,6 +115,15 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         navigationRouter.handleDeepLink(intent)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_UP && event.keyCode == KeyEvent.KEYCODE_ESCAPE) {
+            if (handleBackPress()) {
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun setupContainerBackStackListeners() {

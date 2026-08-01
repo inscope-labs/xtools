@@ -17,6 +17,7 @@ import com.inscopelabs.abx.xtools.kernel.session.PluginSession
 import com.inscopelabs.abx.xtools.kernel.session.SessionManager
 import com.inscopelabs.abx.xtools.plugin.manager.PluginLoadResult
 import com.inscopelabs.abx.xtools.plugin.manager.UnifiedPluginLoader
+import com.inscopelabs.abx.xtools.ui.InputCoordinator
 import com.inscopelabs.abx.xtools.webview.SecureWebView
 import kotlinx.coroutines.launch
 
@@ -164,6 +165,7 @@ class FeatureFragment : Fragment() {
                                 "utf-8",
                                 null
                             )
+                            InputCoordinator.requestWebViewFocus(webView)
                         }
                         is PluginLoadResult.Error -> {
                             Logger.e("FeatureFragment", "Failed to load plugin '$targetPluginDir': ${result.reason}")
@@ -199,6 +201,9 @@ class FeatureFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        if (isAdded) {
+            activity?.let { InputCoordinator.hideKeyboard(it) }
+        }
         jsBridge?.detachWebView()
         jsBridge = null
 
