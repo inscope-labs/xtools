@@ -13,10 +13,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.appbar.MaterialToolbar
+import com.inscopelabs.abx.xtools.BuildConfig
 import com.inscopelabs.abx.xtools.R
 import com.inscopelabs.abx.xtools.XToolsApplication
 import com.inscopelabs.abx.xtools.bridge.BridgeHandler
 import com.inscopelabs.abx.xtools.bridge.JsBridge
+import com.inscopelabs.abx.xtools.diagnostics.DebugToolsLauncher
 import com.inscopelabs.abx.xtools.diagnostics.Logger
 import com.inscopelabs.abx.xtools.kernel.RuntimeKernel
 import com.inscopelabs.abx.xtools.plugin.manager.PluginManager
@@ -67,6 +69,16 @@ class MainActivity : AppCompatActivity() {
         pluginManager = PluginManager.getInstance(applicationContext)
 
         toolbar = findViewById(R.id.toolbar)
+        toolbar.menu.findItem(R.id.action_debug_logs)?.isVisible = BuildConfig.DEBUG
+        toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_debug_logs -> {
+                    DebugToolsLauncher.showLogViewer(this)
+                    true
+                }
+                else -> false
+            }
+        }
         toolbarBrandedView = findViewById(R.id.toolbarBrandedView)
         pluginsContainer = findViewById(R.id.pluginsContainer)
         consoleContainer = findViewById(R.id.consoleContainer)

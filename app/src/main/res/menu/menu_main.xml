@@ -16,4 +16,9 @@
         android:icon="@drawable/ic_privacy"
         android:title="Privacy"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_debug_logs"
+        android:icon="@drawable/ic_bug_report"
+        android:title="Debug Logs"
+        app:showAsAction="never" />
 </menu>
