@@ -1,5 +1,7 @@
 package com.inscopelabs.abx.xtools.kernel.dispatcher.handlers
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import com.inscopelabs.abx.xtools.BuildConfig
@@ -40,6 +42,48 @@ class GetDeviceInfoHandler(
     }
 }
 
+class ClipboardReadHandler(
+    private val context: Context
+) : BridgeActionHandler {
+    override val actionName: String = "clipboard.read"
+    override val requiredCapability: String = "clipboard"
+
+    override suspend fun handle(pluginId: String, request: BridgeRequest): BridgeResponse {
+        val clipboardManager = context.getSystemService(ClipboardManager::class.java)
+        val clip = clipboardManager?.primaryClip
+        val text = if (clip != null && clip.itemCount > 0) {
+            clip.getItemAt(0).coerceToText(context)?.toString() ?: ""
+        } else {
+            ""
+        }
+        val result = JSONObject().apply { put("text", text) }
+        return BridgeResponse.success(request.id, result)
+    }
+}
+
+class ClipboardWriteHandler(
+    private val context: Context
+) : BridgeActionHandler {
+    override val actionName: String = "clipboard.write"
+    override val requiredCapability: String = "clipboard"
+
+    override suspend fun handle(pluginId: String, request: BridgeRequest): BridgeResponse {
+        val text = request.payload.optString("text", "")
+        if (text.isBlank()) {
+            return BridgeResponse.error(
+                id = request.id,
+                error = "INVALID_PARAMS: 'text' field is required and must not be blank.",
+                code = BridgeErrorCodes.INVALID_PARAMS,
+                contextData = mapOf("action" to actionName)
+            )
+        }
+        val clipboardManager = context.getSystemService(ClipboardManager::class.java)
+        val clipData = ClipData.newPlainText("xtools-plugin-clip", text)
+        clipboardManager?.setPrimaryClip(clipData)
+        return BridgeResponse.success(request.id, null)
+    }
+}
+
 /**
  * Generic handler for Phase 4 bridge actions that are not yet implemented.
  * Returns a structured NOT_YET_IMPLEMENTED error response compliant with BridgeResponse schema.
@@ -66,6 +110,8 @@ object DefaultHandlerRegistry {
     ) {
         // Real handlers
         dispatcher.registerHandler(GetDeviceInfoHandler(context, modeArbiter))
+        dispatcher.registerHandler(ClipboardReadHandler(context))
+        dispatcher.registerHandler(ClipboardWriteHandler(context))
 
         // System handlers (NOT_YET_IMPLEMENTED)
         dispatcher.registerHandler(NotYetImplementedActionHandler("system.showNotification", "system"))
