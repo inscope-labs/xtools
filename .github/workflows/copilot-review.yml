@@ -1,0 +1,178 @@
+name: Random Package Code Review
+
+on:
+  schedule:
+    # Daily at 00:00 UTC
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+# Prevent overlapping runs
+concurrency:
+  group: random-package-review
+  cancel-in-progress: false
+
+jobs:
+  audit-package:
+    name: Random Package Audit
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      BASE_DIR: app/src/main/java/com/inscopelabs/abx/xtools
+      REPORT_DIR: audit-reports
+      RETENTION_DAYS: 21
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify Base Directory
+        run: |
+          set -euo pipefail
+
+          if [ ! -d "$BASE_DIR" ]; then
+            echo "::error::Base directory not found: $BASE_DIR"
+            exit 1
+          fi
+
+      - name: Select Random Package
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          readarray -t PACKAGE_ARRAY < <(
+            find "$BASE_DIR" \
+              -type f \
+              \( -name "*.kt" -o -name "*.java" \) \
+              -printf '%h\n' |
+            sort -u
+          )
+
+          if [ "${#PACKAGE_ARRAY[@]}" -eq 0 ]; then
+            echo "::error::No Kotlin or Java packages found."
+            exit 1
+          fi
+
+          RANDOM_INDEX=$(( $(od -An -N2 -tu2 /dev/urandom) % ${#PACKAGE_ARRAY[@]} ))
+
+          PACKAGE_PATH="${PACKAGE_ARRAY[$RANDOM_INDEX]}"
+
+          CLEAN_NAME="${PACKAGE_PATH//\//_}"
+
+          echo "Selected package:"
+          echo "$PACKAGE_PATH"
+
+          echo "PACKAGE_PATH=$PACKAGE_PATH" >> "$GITHUB_OUTPUT"
+          echo "CLEAN_NAME=$CLEAN_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Audit Report
+        shell: bash
+        env:
+          PACKAGE_PATH: ${{ steps.package.outputs.PACKAGE_PATH }}
+          CLEAN_NAME: ${{ steps.package.outputs.CLEAN_NAME }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$REPORT_DIR"
+
+          TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+
+          REPORT_FILE="$REPORT_DIR/${TIMESTAMP}-${CLEAN_NAME}-review.md"
+
+          {
+            echo "# Package Code Review"
+            echo
+            echo "**Package:** \`$PACKAGE_PATH\`"
+            echo
+            echo "**Generated (UTC):** $(date -u)"
+            echo
+            echo "---"
+            echo
+            echo "## Files Reviewed"
+            echo
+
+            find "$PACKAGE_PATH" \
+              -maxdepth 1 \
+              -type f \
+              \( -name "*.kt" -o -name "*.java" \) |
+            sort |
+            while read -r file
+            do
+              echo "- \`$(basename "$file")\`"
+            done
+
+            echo
+            echo "---"
+            echo
+            echo "## Automated Review"
+            echo
+            echo "> Placeholder for future automated static analysis."
+            echo
+            echo "### Potential Deficiencies"
+            echo
+            echo "- To be populated by future review tooling."
+            echo
+            echo "### Code Smells"
+            echo
+            echo "- To be populated."
+            echo
+            echo "### Security Observations"
+            echo
+            echo "- To be populated."
+            echo
+            echo "### Architectural Notes"
+            echo
+            echo "- To be populated."
+            echo
+            echo "### Recommended Improvements"
+            echo
+            echo "- To be populated."
+          } > "$REPORT_FILE"
+
+          echo "Generated:"
+          echo "$REPORT_FILE"
+
+      - name: Prune Reports Older Than 21 Days
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$REPORT_DIR"
+
+          echo "Pruning reports older than ${RETENTION_DAYS} days..."
+
+          find "$REPORT_DIR" \
+            -type f \
+            -name "*.md" \
+            -mtime +${RETENTION_DAYS} \
+            -print \
+            -delete || true
+
+      - name: Commit Changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add "$REPORT_DIR"
+
+          if git diff --cached --quiet; then
+            echo "No changes detected."
+            exit 0
+          fi
+
+          git commit -m "chore(audit): package review ($(date -u +'%Y-%m-%d'))"
+
+          git push
