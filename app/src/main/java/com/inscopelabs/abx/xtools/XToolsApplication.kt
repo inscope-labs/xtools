@@ -2,6 +2,7 @@ package com.inscopelabs.abx.xtools
 
 import android.app.Application
 import com.inscopelabs.abx.xtools.bridge.api.BridgeApiFacade
+import com.inscopelabs.abx.xtools.diagnostics.CrashReporterManager
 import com.inscopelabs.abx.xtools.diagnostics.DiagnosticsInitializer
 import com.inscopelabs.abx.xtools.diagnostics.GlobalExceptionHandler
 import com.inscopelabs.abx.xtools.kernel.RuntimeKernel
@@ -69,10 +70,10 @@ class XToolsApplication : Application() {
 
         ensureWebViewCacheDirs()
 
-        // Diagnostics must come up before the exception handler,
-        // since GlobalExceptionHandler calls Logger + CrashReporterManager.
-        DiagnosticsInitializer.initialize(this)
+        // Global exception handler and crash reporter initialized before diagnostics.
         Thread.setDefaultUncaughtExceptionHandler(GlobalExceptionHandler(this))
+        CrashReporterManager.initialize(this)
+        DiagnosticsInitializer.initialize(this)
 
         initRuntimeKernel()
     }

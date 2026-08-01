@@ -6,21 +6,14 @@ object DiagnosticsInitializer {
     private var watchdog: AnrWatchdog? = null
 
     fun initialize(context: Context) {
-        StartupDiagnostics.recordEvent("DiagnosticsInitializer.initialize started")
-        
-        // 1. Logger
+        SessionManager.activateSession()
+        StartupDiagnostics.recordEvent("Diagnostic session activated: ${SessionManager.sessionId}")
+
         Logger.initialize(context)
         StartupDiagnostics.recordEvent("Logger initialized")
 
-        // 2. Crash reporting manager
-        CrashReporterManager.initialize(context)
-        StartupDiagnostics.recordEvent("CrashReporterManager initialized")
-
-        // 3. ANR Watchdog
         watchdog = AnrWatchdog().apply { start() }
         StartupDiagnostics.recordEvent("ANR Watchdog started")
-
-        StartupDiagnostics.recordEvent("DiagnosticsInitializer.initialize finished")
     }
 
     fun shutdown() {

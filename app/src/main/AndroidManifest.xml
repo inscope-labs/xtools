@@ -83,15 +83,6 @@
             android:launchMode="singleInstance"
             android:theme="@style/Theme.XTools" />
 
-        <activity
-            android:name=".diagnostics.LogViewerActivity"
-            android:exported="false"
-            android:theme="@style/Theme.XTools" />
-
-        <service
-            android:name=".diagnostics.DiagnosticService"
-            android:exported="false" />
-
         <!-- File Provider for plugin assets -->
         <provider
             android:name="androidx.core.content.FileProvider"
