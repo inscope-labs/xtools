@@ -51,6 +51,36 @@ not incremented) explicitly in the task's mandatory agent report, per section
 1 above — this is a required addition to every future agent report, not just
 this one.
 
+## 2a. Debug Code Reset After a Release
+
+A separate file, release-state.json, is written at repo root by the
+release-apk.yml / release-aab.yml GitHub Actions workflows whenever a
+signed release build ships. This file is NOT subject to the "AI-Studio-only"
+restriction in section 2 — it is CI-owned and CI-writable. Only
+version.properties carries that restriction.
+
+Before applying the normal version-increment rule in section 2, always
+first read release-state.json (if it exists) and check its
+pending_debug_reset field:
+
+- If pending_debug_reset is true:
+  - Set debugCode to 0001 (reset to baseline, not an increment).
+  - Set versionCode to last_release_version_code + 1 from
+    release-state.json (resyncing local versionCode to stay ahead of the
+    real released number, rather than continuing the old pre-release
+    debug-build counting sequence).
+  - Do NOT also apply the normal probability-score increment logic from
+    section 2 in the same task — this reset replaces it for this one task
+    only. Normal probability-scored incrementing resumes on the next task.
+  - Set pending_debug_reset back to false in release-state.json as part
+    of this same commit (this file's other fields —
+    last_release_version_code, last_release_version_name, released_at,
+    released_by — are historical record and should be left unchanged).
+  - State in the agent report that a pending release reset was found and
+    applied, including the old and new debugCode/versionCode values.
+- If pending_debug_reset is false or release-state.json does not exist:
+  proceed with the normal section 2 logic unchanged.
+
 ## 3. Mandatory Logging Standard
 
 Every new Activity, Fragment, feature, or discrete piece of functionality
