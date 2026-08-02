@@ -138,8 +138,21 @@ class BuildFragment : Fragment() {
             )
             val localInstaller = LocalInstaller(pipeline)
             when (val r = localInstaller.install(bundle, sigDir)) {
-                is InstallationPipeline.Result.Success ->
+                is InstallationPipeline.Result.Success -> {
                     out.append("Installed ${r.id} -> ${r.installPath}\n")
+                    try {
+                        val canonicalManifest = StudioManifestBridge.toCanonical(manifest)
+                        com.inscopelabs.abx.xtools.XToolsApplication.instance.pluginRegistry.register(
+                            manifest = canonicalManifest,
+                            installationPath = r.installPath.path,
+                            category = "studio",
+                            trustTier = com.inscopelabs.abx.xtools.kernel.registry.PluginTrustTier.PIPELINE_SIGNED
+                        )
+                        out.append("Registered in app registry (PIPELINE_SIGNED)\n")
+                    } catch (e: Exception) {
+                        out.append("Local build succeeded but registration into real app failed: ${e.message}\n")
+                    }
+                }
                 is InstallationPipeline.Result.Failure ->
                     out.append("Install failed: ${r.reason} (${r.code})\n")
             }
