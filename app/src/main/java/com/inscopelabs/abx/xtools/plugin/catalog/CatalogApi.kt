@@ -15,6 +15,7 @@ data class CatalogPlugin(
     val downloadUrl: String,
     val sha256Hash: String,
     val signature: String? = null,
+    val certificatePem: String? = null,
     val fileSizeBytes: Long,
     val releaseDate: String? = null,
     val screenshots: List<String> = emptyList(),

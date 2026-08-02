@@ -2,6 +2,7 @@ package com.inscopelabs.abx.xtools.plugin.lifecycle
 
 import com.inscopelabs.abx.xtools.bridge.manifest.ManifestParser
 import com.inscopelabs.abx.xtools.bridge.manifest.PluginManifest
+import com.inscopelabs.abx.xtools.kernel.registry.PluginTrustTier
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogPlugin
 import com.inscopelabs.abx.xtools.plugin.download.BundleExtractor
 import com.inscopelabs.abx.xtools.plugin.download.DownloadManager
@@ -10,10 +11,12 @@ import com.inscopelabs.abx.xtools.plugin.download.Sha256Verifier
 import com.inscopelabs.abx.xtools.plugin.download.SignatureVerifier
 import com.inscopelabs.abx.xtools.plugin.storage.PluginDirectoryManager
 import com.inscopelabs.abx.xtools.plugin.storage.PluginMetadataStore
+import android.util.Base64
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
+import java.util.zip.ZipFile
 
 /**
  * Orchestrates the complete installation pipeline:
@@ -50,12 +53,41 @@ class InstallationPipeline(
             _installProgress.value = InstallProgress.Verifying(catalogPlugin.id, "SHA-256")
             Sha256Verifier.verify(bundleFile, catalogPlugin.sha256Hash)
 
-            // Step 4: Verify signature (if signature is provided).
-            if (catalogPlugin.signature != null) {
-                _installProgress.value = InstallProgress.Verifying(catalogPlugin.id, "Signature")
-                // In practice, we would read manifest bytes and the signature from the bundle.
-                // For stub, we assume signature verification passes.
-                // SignatureVerifier.verify(manifestBytes, signatureBytes, catalogPlugin.certificatePem)
+            // Step 4: Verify signature (mandatory gate before extraction).
+            _installProgress.value = InstallProgress.Verifying(catalogPlugin.id, "Signature")
+            val signature = catalogPlugin.signature
+            val certificatePem = catalogPlugin.certificatePem
+            if (signature.isNullOrBlank() || certificatePem.isNullOrBlank()) {
+                directoryManager.cleanupStagingDirectory(catalogPlugin.id)
+                return InstallResult.Failure("Plugin bundle is not signed. Installation rejected.")
+            }
+
+            val manifestBytes = try {
+                ZipFile(bundleFile).use { zip ->
+                    val entry = zip.getEntry("plugin-manifest.json") ?: zip.getEntry("plugin.json")
+                    if (entry == null) {
+                        directoryManager.cleanupStagingDirectory(catalogPlugin.id)
+                        return InstallResult.Failure("Missing plugin-manifest.json in bundle")
+                    }
+                    zip.getInputStream(entry).use { it.readBytes() }
+                }
+            } catch (e: Exception) {
+                directoryManager.cleanupStagingDirectory(catalogPlugin.id)
+                return InstallResult.Failure("Failed to read manifest from bundle: ${e.message}")
+            }
+
+            val signatureBytes = try {
+                Base64.decode(signature, Base64.DEFAULT)
+            } catch (e: Exception) {
+                directoryManager.cleanupStagingDirectory(catalogPlugin.id)
+                return InstallResult.Failure("Invalid signature format: ${e.message}")
+            }
+
+            try {
+                SignatureVerifier.verify(manifestBytes, signatureBytes, certificatePem)
+            } catch (e: SecurityException) {
+                directoryManager.cleanupStagingDirectory(catalogPlugin.id)
+                return InstallResult.Failure("Signature verification failed: ${e.message}")
             }
 
             // Step 5: Extract the bundle.
@@ -89,7 +121,7 @@ class InstallationPipeline(
 
             // Step 11: Register with PluginRegistry (implicitly via callback).
             _installProgress.value = InstallProgress.Complete(catalogPlugin.id)
-            InstallResult.Success(manifest)
+            InstallResult.Success(manifest, trustTier = PluginTrustTier.VERIFIED)
 
         } catch (e: Exception) {
             // Rollback: clean up staging directory.
@@ -111,6 +143,6 @@ sealed class InstallProgress {
 }
 
 sealed class InstallResult {
-    data class Success(val manifest: PluginManifest) : InstallResult()
+    data class Success(val manifest: PluginManifest, val trustTier: PluginTrustTier) : InstallResult()
     data class Failure(val reason: String) : InstallResult()
 }

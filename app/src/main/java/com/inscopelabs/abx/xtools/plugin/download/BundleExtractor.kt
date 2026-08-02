@@ -23,7 +23,7 @@ object BundleExtractor {
                 // SECURITY: Prevent zip-slip.
                 val canonicalDest = destinationDir.canonicalPath
                 val canonicalTarget = targetFile.canonicalPath
-                if (!canonicalTarget.startsWith(canonicalDest)) {
+                if (!canonicalTarget.startsWith(canonicalDest + File.separator) && canonicalTarget != canonicalDest) {
                     throw SecurityException("Zip-slip attempt: ${entry.name} escapes destination directory")
                 }
 

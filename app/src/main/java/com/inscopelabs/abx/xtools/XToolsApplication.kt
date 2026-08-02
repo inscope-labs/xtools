@@ -17,13 +17,14 @@ import com.inscopelabs.abx.xtools.kernel.mode.StandaloneLayerManager
 import com.inscopelabs.abx.xtools.kernel.mode.ValidationResult
 import com.inscopelabs.abx.xtools.kernel.permission.PermissionManager
 import com.inscopelabs.abx.xtools.kernel.registry.PluginRegistry
+import com.inscopelabs.abx.xtools.kernel.registry.PluginState
+import com.inscopelabs.abx.xtools.kernel.registry.PluginTrustTier
 import com.inscopelabs.abx.xtools.kernel.session.SessionManager
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogApi
 import com.inscopelabs.abx.xtools.plugin.catalog.CatalogCache
 import com.inscopelabs.abx.xtools.plugin.catalog.RemoteCatalogService
 import com.inscopelabs.abx.xtools.bridge.manifest.ManifestParser
 import com.inscopelabs.abx.xtools.bridge.manifest.PluginManifest
-import com.inscopelabs.abx.xtools.kernel.registry.PluginState
 import com.inscopelabs.abx.xtools.plugin.lifecycle.ActivationManager
 import com.inscopelabs.abx.xtools.plugin.lifecycle.UninstallManager
 import com.inscopelabs.abx.xtools.plugin.storage.PluginDirectoryManager
@@ -128,7 +129,7 @@ class XToolsApplication : Application() {
             try {
                 val json = assets.open("plugins/$dirName/plugin.json").bufferedReader().use { it.readText() }
                 val manifest = manifestParser.parse(json)
-                pluginRegistry.register(manifest, installationPath = dirName, category = "sample")
+                pluginRegistry.register(manifest, installationPath = dirName, category = "sample", trustTier = PluginTrustTier.VERIFIED)
                 pluginRegistry.updateState(manifest.id, PluginState.ACTIVE)
                 permissionManager.registerPluginDeclaredPermissions(manifest.id, manifest.permissions)
                 for (permission in manifest.permissions) {

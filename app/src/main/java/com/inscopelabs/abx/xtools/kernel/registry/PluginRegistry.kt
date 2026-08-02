@@ -16,8 +16,13 @@ class PluginRegistry {
     private val _plugins = MutableStateFlow<Map<String, PluginEntry>>(emptyMap())
     val plugins: StateFlow<Map<String, PluginEntry>> = _plugins.asStateFlow()
 
-    fun register(manifest: PluginManifest, installationPath: String, category: String = "general") {
-        Logger.i("PluginRegistry", "register: pluginId='${manifest.id}', v${manifest.version}, category=$category")
+    fun register(
+        manifest: PluginManifest,
+        installationPath: String,
+        category: String = "general",
+        trustTier: PluginTrustTier
+    ) {
+        Logger.i("PluginRegistry", "register: pluginId='${manifest.id}', v${manifest.version}, category=$category, trustTier=$trustTier")
         val entry = PluginEntry(
             id = manifest.id,
             manifest = manifest,
@@ -25,6 +30,7 @@ class PluginRegistry {
             version = manifest.version,
             permissions = manifest.permissions,
             category = category,
+            trustTier = trustTier,
             state = PluginState.INSTALLED
         )
         _plugins.value = _plugins.value + (manifest.id to entry)
@@ -59,8 +65,14 @@ data class PluginEntry(
     val version: String,
     val permissions: List<String>,
     val category: String = "general",
+    val trustTier: PluginTrustTier,
     val state: PluginState = PluginState.INSTALLED
 )
+
+enum class PluginTrustTier {
+    VERIFIED,
+    PIPELINE_SIGNED
+}
 
 enum class PluginState {
     INSTALLED, ACTIVE, INACTIVE, ERROR
