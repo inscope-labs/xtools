@@ -30,6 +30,14 @@ data class SessionEntity(
     val messages: List<Message> // stored as JSON string via converter
 )
 
+@Entity(tableName = "driver_profiles")
+@TypeConverters(Converters::class)
+data class DriverProfileEntity(
+    @PrimaryKey val driverId: String,
+    val enabled: Boolean,
+    val settings: ChatSettings
+)
+
 @Entity(tableName = "messages")
 data class MessageEntity(
     @PrimaryKey val id: String,
@@ -85,9 +93,25 @@ interface ChatDao {
     // But we can add convenience for adding a message via session update
 }
 
-@Database(entities = [SessionEntity::class], version = 1)
+@Dao
+interface DriverProfileDao {
+    @Query("SELECT * FROM driver_profiles WHERE driverId = :driverId")
+    suspend fun getProfile(driverId: String): DriverProfileEntity?
+
+    @Query("SELECT * FROM driver_profiles")
+    fun observeAllProfiles(): Flow<List<DriverProfileEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveProfile(profile: DriverProfileEntity)
+
+    @Delete
+    suspend fun deleteProfile(profile: DriverProfileEntity)
+}
+
+@Database(entities = [SessionEntity::class, DriverProfileEntity::class], version = 2)
 abstract class ChatDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
+    abstract fun driverProfileDao(): DriverProfileDao
 
     companion object {
         @Volatile
@@ -99,11 +123,32 @@ abstract class ChatDatabase : RoomDatabase() {
                     context.applicationContext,
                     ChatDatabase::class.java,
                     "chat_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
         }
+    }
+}
+
+class DriverProfileRepository(private val dao: DriverProfileDao) {
+    suspend fun getProfile(driverId: String): DriverProfile? =
+        dao.getProfile(driverId)?.let { DriverProfile(it.driverId, it.enabled, it.settings) }
+
+    fun observeAllProfiles(): Flow<List<DriverProfile>> =
+        dao.observeAllProfiles().map { entities ->
+            entities.map { DriverProfile(it.driverId, it.enabled, it.settings) }
+        }
+
+    suspend fun saveProfile(profile: DriverProfile) {
+        dao.saveProfile(DriverProfileEntity(profile.driverId, profile.enabled, profile.settings))
+    }
+
+    suspend fun deleteProfile(driverId: String) {
+        val entity = dao.getProfile(driverId) ?: return
+        dao.deleteProfile(entity)
     }
 }
 

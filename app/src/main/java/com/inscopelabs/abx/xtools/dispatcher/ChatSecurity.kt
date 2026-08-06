@@ -1,21 +1,26 @@
 package com.inscopelabs.abx.xtools.dispatcher
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-class ChatSecurity(context: Context) {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+class ChatSecurity(context: Context, storeName: String = "abx_secure_chat_prefs") {
+    private val sharedPreferences: SharedPreferences = try {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
 
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "abx_secure_chat_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+        EncryptedSharedPreferences.create(
+            context,
+            storeName,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        context.getSharedPreferences(storeName, Context.MODE_PRIVATE)
+    }
 
     fun storeApiKey(provider: String, apiKey: String) {
         sharedPreferences.edit().putString("api_key_$provider", apiKey).apply()

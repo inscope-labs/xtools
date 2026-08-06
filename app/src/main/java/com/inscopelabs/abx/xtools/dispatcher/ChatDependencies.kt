@@ -24,6 +24,11 @@ object ChatDependencies {
     @Volatile
     private var chatRepositoryInstance: ChatRepository? = null
 
+    @Volatile
+    private var driverProfileRepositoryInstance: DriverProfileRepository? = null
+
+    private val driverChatManagers = java.util.concurrent.ConcurrentHashMap<String, ChatManager>()
+
     fun chatManager(context: Context): ChatManager {
         return chatManagerInstance ?: synchronized(this) {
             chatManagerInstance ?: build(context.applicationContext).also { chatManagerInstance = it }
@@ -49,6 +54,55 @@ object ChatDependencies {
             chatRepositoryInstance ?: ChatRepository(ChatDatabase.getInstance(context.applicationContext).chatDao())
                 .also { chatRepositoryInstance = it }
         }
+    }
+
+    fun driverProfileRepository(context: Context): DriverProfileRepository {
+        return driverProfileRepositoryInstance ?: synchronized(this) {
+            driverProfileRepositoryInstance ?: DriverProfileRepository(
+                ChatDatabase.getInstance(context.applicationContext).driverProfileDao()
+            ).also { driverProfileRepositoryInstance = it }
+        }
+    }
+
+    /**
+     * Returns an isolated ChatManager for the given driver, or null if no
+     * enabled profile exists — callers MUST treat null as an access denial,
+     * not an error to work around. Each driver gets its own ChatSecurity
+     * (separate encrypted storage) and its own ChatCache/ProviderFactory
+     * instance — TokenCounter, PromptBuilder, ChatMemory, ChatLogger, and
+     * the underlying session Repository/Room database stay shared, since
+     * they hold no per-driver-sensitive state.
+     */
+    suspend fun chatManagerForDriver(context: Context, driverId: String): ChatManager? {
+        driverChatManagers[driverId]?.let { return it }
+        val profile = driverProfileRepository(context).getProfile(driverId) ?: return null
+        if (!profile.enabled) return null
+        return synchronized(this) {
+            driverChatManagers[driverId] ?: buildIsolated(context.applicationContext, profile)
+                .also { driverChatManagers[driverId] = it }
+        }
+    }
+
+    private fun buildIsolated(appContext: Context, profile: DriverProfile): ChatManager {
+        val repository = chatRepository(appContext)
+        val tokenCounter = TokenCounter()
+        val chatMemory = ChatMemory(tokenCounter)
+        val promptBuilder = PromptBuilder(tokenCounter)
+        val chatLogger = ChatLogger()
+        val security = ChatSecurity(appContext, storeName = "abx_secure_chat_prefs_${profile.driverId}")
+        val chatCache = ChatCache()
+        val providerFactory = ProviderFactory()
+
+        return ChatManager(
+            repository = repository,
+            providerFactory = providerFactory,
+            promptBuilder = promptBuilder,
+            tokenCounter = tokenCounter,
+            chatMemory = chatMemory,
+            chatLogger = chatLogger,
+            chatSecurity = security,
+            chatCache = chatCache
+        )
     }
 
     private fun build(appContext: Context): ChatManager {

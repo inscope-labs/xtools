@@ -54,14 +54,15 @@ class ChatManager(
     suspend fun createSession(
         title: String = "New Chat",
         provider: String = "gemini",
-        model: String = "gemini-2.5-flash"
+        model: String = "gemini-2.5-flash",
+        settingsOverride: ChatSettings? = null
     ): ChatSession {
         val session = ChatSession(
             id = UUID.randomUUID().toString(),
             title = title,
             provider = provider,
             model = model,
-            settings = ChatSettings(provider = provider, model = model)
+            settings = settingsOverride ?: ChatSettings(provider = provider, model = model)
         )
         repository.saveSession(session)
         _events.emit(ChatEvent.SessionCreated(session))
