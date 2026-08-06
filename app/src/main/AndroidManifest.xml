@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissions -->
+    <permission
+        android:name="com.inscopelabs.abx.permission.DISPATCHER_EXECUTION"
+        android:protectionLevel="normal" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -87,6 +90,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Dispatcher Executor Service -->
+        <service
+            android:name=".dispatcher.DispatcherExecutorService"
+            android:exported="true"
+            android:permission="com.inscopelabs.abx.permission.DISPATCHER_EXECUTION">
+            <intent-filter>
+                <action android:name="com.inscopelabs.abx.contractdispatcher.DISPATCHER_EXECUTOR_SERVICE" />
+            </intent-filter>
+        </service>
 
     </application>
 
