@@ -6,7 +6,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
 class ChatSecurity(context: Context, storeName: String = "abx_secure_chat_prefs") {
-    private val sharedPreferences: SharedPreferences = try {
+    private val sharedPreferences: SharedPreferences = run {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -18,8 +18,6 @@ class ChatSecurity(context: Context, storeName: String = "abx_secure_chat_prefs"
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
-    } catch (e: Exception) {
-        context.getSharedPreferences(storeName, Context.MODE_PRIVATE)
     }
 
     fun storeApiKey(provider: String, apiKey: String) {

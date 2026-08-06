@@ -26,4 +26,8 @@ class ChatLogger {
     fun logCancellation(sessionId: String) {
         Log.w(TAG, "Session execution cancelled: $sessionId")
     }
+
+    fun logAccessDenied(driverId: String, reason: String) {
+        Log.w(TAG, "Access denied for driver '$driverId': $reason")
+    }
 }

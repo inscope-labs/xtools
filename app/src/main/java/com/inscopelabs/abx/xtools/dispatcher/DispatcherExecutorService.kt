@@ -42,15 +42,12 @@ class DispatcherExecutorService : Service() {
             }
 
             return runBlocking(Dispatchers.IO) {
-                // Show low-priority notification
-                showProcessingNotification(request.originComponent)
-
                 // 2. Resolve driver profile
                 val profileRepo = ChatDependencies.driverProfileRepository(applicationContext)
                 val profile = profileRepo.getProfile(request.originComponent)
 
                 if (profile == null || !profile.enabled) {
-                    chatLogger.logCancellation("Access denied: no enabled profile for driver ${request.originComponent}")
+                    chatLogger.logAccessDenied(request.originComponent, "no enabled profile")
                     return@runBlocking DispatcherResponse(
                         false,
                         null,
@@ -60,10 +57,13 @@ class DispatcherExecutorService : Service() {
                     )
                 }
 
+                // Show low-priority notification
+                showProcessingNotification(request.originComponent)
+
                 // 3. Resolve isolated ChatManager
                 val chatManager = ChatDependencies.chatManagerForDriver(applicationContext, request.originComponent)
                 if (chatManager == null) {
-                    chatLogger.logCancellation("Access denied: isolated ChatManager resolution failed for ${request.originComponent}")
+                    chatLogger.logAccessDenied(request.originComponent, "isolated ChatManager resolution failed")
                     return@runBlocking DispatcherResponse(
                         false,
                         null,
