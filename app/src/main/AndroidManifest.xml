@@ -60,12 +60,6 @@
         </activity>
 
         <activity
-            android:name=".plugin.PluginHostActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.XTools" />
-
-        <activity
             android:name=".boot.RecoveryActivity"
             android:exported="false"
             android:launchMode="singleInstance"
